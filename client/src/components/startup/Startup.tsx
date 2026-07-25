@@ -4,7 +4,7 @@
  * What it does:
  * - Renders the Navbar at the top.
  * - Shows a heading and two user-type selection cards (Requester & Signer).
- * - When a card is clicked, a toast notification appears confirming the selection.
+ * - When a card is clicked, the corresponding homepage screen opens.
  * - This is the first screen users see when opening the application.
  *
  * Architecture:
@@ -13,31 +13,19 @@
  *   ├── Header section  (heading + subtitle)
  *   └── UserTypeCard[]  (clickable cards for user selection)
  */
-import { toast } from "sonner"
 import { FileText, PenLine } from "lucide-react"
 import { Navbar } from "../shared/Navbar"
 import { UserTypeCard } from "./UserTypeCard"
 import "./Startup.css"
 
 interface StartupProps {
-  /** Called when user picks "Requester" — navigates to homepage. */
+  /** Called when user picks "Requester" — navigates to requester homepage. */
   onRequesterClick?: () => void
+  /** Called when user picks "Signer" — navigates to signer homepage. */
+  onSignerClick?: () => void
 }
 
-/**
- * handleUserTypeSelect — Called when a user type card is clicked.
- * Shows a toast notification telling the user which role they picked.
- *
- * @param userType - Either "Requester" or "Signer"
- */
-function handleSignerSelect() {
-  toast.success("You selected: Signer", {
-    description: "Welcome, Signer! Setting up your experience...",
-    duration: 3000,
-  })
-}
-
-export function Startup({ onRequesterClick }: StartupProps = {}) {
+export function Startup({ onRequesterClick, onSignerClick }: StartupProps = {}) {
   return (
     <div className="startup">
       {/* Navigation bar — icon + "PirmaKo" brand name */}
@@ -59,14 +47,14 @@ export function Startup({ onRequesterClick }: StartupProps = {}) {
             title="Requester"
             description="Request documents for signature and track their status"
             icon={FileText}
-            onClick={onRequesterClick ?? (() => handleSignerSelect())}
+            onClick={onRequesterClick ?? (() => {})}
           />
 
           <UserTypeCard
             title="Signer"
             description="Review and sign documents sent to you for approval"
             icon={PenLine}
-            onClick={handleSignerSelect}
+            onClick={onSignerClick ?? (() => {})}
           />
         </div>
       </main>

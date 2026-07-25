@@ -1,0 +1,819 @@
+/* ============================================================
+ * PirmaKo Signer Homepage Screen — Styles
+ *
+ * Matches the Startup.css and Homepage.css design system:
+ *   - Same CSS custom properties (colors, shadows, transitions)
+ *   - Dark mode only, indigo accent (#6366f1)
+ *   - Rounded cards, soft shadows, minimalist, Linear-inspired
+ *
+ * Sections:
+ *   1. CSS Variables (shared with Startup.css / Homepage.css)
+ *   2. Navbar (shared styles + back button)
+ *   3. Signer homepage layout
+ *   4. Header & sort dropdown
+ *   5. PDF list & rows
+ *   6. Empty state
+ *   7. Popup overlay (glass/blur background)
+ *   8. PDF viewer popup (70/30 split layout)
+ *   9. PDF editor popup (drag-and-drop signature)
+ *  10. Shared popup button styles
+ *  11. Responsive breakpoints
+ * ============================================================ */
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 1. CSS Variables — same values used across all screens.
+ * ────────────────────────────────────────────────────────────── */
+
+:root {
+  --color-bg-primary: #0f0f1a;
+  --color-bg-secondary: #1a1a2e;
+  --color-bg-tertiary: #16162a;
+  --color-border: #2a2a40;
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #6366f1;
+  --color-accent-hover: #818cf8;
+  --color-accent-glow: rgba(99, 102, 241, 0.15);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover: 0 8px 32px rgba(99, 102, 241, 0.12);
+  --transition-default: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Status-specific colors */
+  --color-status-pending: #f59e0b;
+  --color-status-signed: #22c55e;
+  --color-status-failed: #ef4444;
+  --color-status-pending-bg: rgba(245, 158, 11, 0.12);
+  --color-status-signed-bg: rgba(34, 197, 94, 0.12);
+  --color-status-failed-bg: rgba(239, 68, 68, 0.12);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 2. Navbar — shared styles + back button
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-homepage .navbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+}
+
+.signer-homepage .navbar__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
+.signer-homepage .navbar__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* Back button — appears in the navbar */
+.signer-homepage .navbar__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-default);
+  margin-right: 4px;
+  outline: none;
+}
+.signer-homepage .navbar__back:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+  background: var(--color-accent-glow);
+}
+.signer-homepage .navbar__back:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 3. Signer homepage layout
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-homepage {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.signer-homepage__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 24px;
+}
+
+.signer-homepage__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 4px;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 4. Header & sort dropdown
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.signer-header__heading {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+/* Sort dropdown wrapper */
+.signer-header__sort {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: border-color var(--transition-default);
+}
+.signer-header__sort:hover {
+  border-color: var(--color-accent);
+}
+
+.signer-header__sort-icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+/* Dropdown trigger button */
+.signer-header__sort-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.signer-header__sort-trigger:hover {
+  color: var(--color-accent-hover);
+}
+
+/* Chevron rotation */
+.signer-header__sort-chevron {
+  transition: transform var(--transition-default);
+  flex-shrink: 0;
+}
+.signer-header__sort-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.signer-header__sort-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card);
+  padding: 6px;
+  z-index: 60;
+  animation: signerSortMenuSlideIn 0.15s ease-out;
+}
+
+/* Sort option */
+.signer-header__sort-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+}
+.signer-header__sort-option:hover {
+  background: var(--color-accent-glow);
+  color: var(--color-text-primary);
+}
+.signer-header__sort-option--active {
+  color: var(--color-accent);
+  background: var(--color-accent-glow);
+  font-weight: 500;
+}
+
+@keyframes signerSortMenuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 5. PDF list & rows
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-pdf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  padding-right: 4px;
+  padding-top: 2px;
+}
+
+/* Custom scrollbar — thin, matches dark theme */
+.signer-pdf-list::-webkit-scrollbar {
+  width: 6px;
+}
+.signer-pdf-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.signer-pdf-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+.signer-pdf-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* A single PDF row */
+.signer-pdf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  transition: all var(--transition-default);
+  box-shadow: var(--shadow-card);
+  gap: 16px;
+  margin-top: 1px;
+}
+.signer-pdf-row:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+/* Left side — icon + text info */
+.signer-pdf-row__info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.signer-pdf-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.signer-pdf-row__details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.signer-pdf-row__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signer-pdf-row__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Right side — status badge + e-sign button */
+.signer-pdf-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Status badge — pill-shaped with color-coded background */
+.signer-pdf-row__status {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.signer-pdf-row__status--pending {
+  color: var(--color-status-pending);
+  background: var(--color-status-pending-bg);
+}
+.signer-pdf-row__status--signed {
+  color: var(--color-status-signed);
+  background: var(--color-status-signed-bg);
+}
+
+/* E-sign button — always clickable, accent-colored */
+.signer-pdf-row__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+}
+.signer-pdf-row__btn:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+/* E-sign button — indigo accent on hover */
+.signer-pdf-row__btn--esign:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent-glow);
+  transform: scale(1.05);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 6. Empty state
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 24px;
+}
+
+.signer-empty-state__illustration {
+  opacity: 0.6;
+  transition: opacity var(--transition-default);
+}
+.signer-empty-state__illustration:hover {
+  opacity: 0.8;
+}
+
+.signer-empty-state__text {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 7. Popup overlay — glass/blur background for modals
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: signerFadeIn 0.2s ease-out;
+}
+
+/* Shared popup container */
+.signer-popup {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: signerSlideUp 0.25s ease-out;
+  display: flex;
+  overflow: hidden;
+  width: 90%;
+  max-width: 960px;
+  height: 70vh;
+  max-height: 600px;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 8. PDF viewer popup — 70/30 split layout
+ * ────────────────────────────────────────────────────────────── */
+
+/* Left side — PDF preview area (70%) */
+.signer-viewer-popup__pdf-area {
+  flex: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-primary);
+  border-right: 1px solid var(--color-border);
+  min-width: 0;
+}
+
+/* Placeholder shown until a real PDF renderer is connected */
+.signer-viewer-popup__pdf-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+}
+
+/* Right side — PDF details + actions (30%) */
+.signer-viewer-popup__details {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+  gap: 20px;
+  min-width: 220px;
+}
+
+.signer-viewer-popup__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+
+/* Detail info block (label + value) */
+.signer-viewer-popup__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signer-viewer-popup__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.signer-viewer-popup__value {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+/* Action buttons — stacked vertically in the details panel */
+.signer-viewer-popup__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 9. PDF editor popup — drag-and-drop signature
+ * ────────────────────────────────────────────────────────────── */
+
+/* Editor canvas area — full width like the viewer */
+.signer-editor-popup {
+  flex-direction: column;
+}
+
+.signer-editor-popup__canvas-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-primary);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Simulated PDF page inside the editor */
+.signer-editor-popup__page {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: 500px;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding: 32px;
+  overflow: hidden;
+}
+
+/* Simulated text lines on the page */
+.signer-editor-popup__page-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0.15;
+}
+
+.signer-editor-popup__line {
+  height: 8px;
+  border-radius: 4px;
+  background: #333;
+}
+.signer-editor-popup__line:nth-child(odd) {
+  width: 100%;
+}
+.signer-editor-popup__line:nth-child(even) {
+  width: 80%;
+}
+
+/* Draggable signature element */
+.signer-editor-popup__signature {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--color-accent-glow);
+  border: 2px dashed var(--color-accent);
+  border-radius: 8px;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow 0.15s ease;
+  z-index: 10;
+}
+.signer-editor-popup__signature:active {
+  cursor: grabbing;
+  box-shadow: 0 0 0 4px var(--color-accent-glow);
+}
+
+/* Action buttons — bottom of the editor */
+.signer-editor-popup__actions {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 10. Shared popup button styles
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-popup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+  border: 1px solid var(--color-border);
+  width: 100%;
+}
+
+/* Sign button — green */
+.signer-popup-btn--sign {
+  background: var(--color-status-signed);
+  color: white;
+  border-color: var(--color-status-signed);
+}
+.signer-popup-btn--sign:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+}
+.signer-popup-btn--sign:focus-visible {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+}
+
+/* Check button — accent indigo */
+.signer-popup-btn--check {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+.signer-popup-btn--check:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+.signer-popup-btn--check:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+/* Cancel button — red */
+.signer-popup-btn--cancel {
+  background: var(--color-bg-tertiary);
+  color: var(--color-status-failed);
+  border-color: var(--color-status-failed);
+}
+.signer-popup-btn--cancel:hover {
+  background: var(--color-status-failed-bg);
+  transform: translateY(-1px);
+}
+.signer-popup-btn--cancel:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+/* Editor uses row layout for buttons */
+.signer-editor-popup__actions .signer-popup-btn {
+  width: auto;
+}
+
+/* Editor header — shows document title and hint */
+.signer-editor-popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+}
+
+.signer-editor-popup__header-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+}
+
+.signer-editor-popup__header-hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 11. Popup entrance animations
+ * ────────────────────────────────────────────────────────────── */
+
+@keyframes signerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes signerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 12. Responsive breakpoints
+ * ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .signer-popup {
+    flex-direction: column;
+    height: 85vh;
+    max-height: none;
+  }
+
+  .signer-viewer-popup__pdf-area {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    flex: none;
+    height: 50%;
+  }
+
+  .signer-viewer-popup__details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .signer-editor-popup__page {
+    max-width: 100%;
+    max-height: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .signer-homepage__main {
+    padding: 20px 16px;
+  }
+
+  .signer-header__heading {
+    font-size: 22px;
+  }
+
+  .signer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .signer-pdf-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .signer-pdf-row__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .signer-popup {
+    width: 95%;
+  }
+
+  .signer-viewer-popup__details {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 400px) {
+  .signer-pdf-row__title {
+    font-size: 14px;
+  }
+
+  .signer-pdf-row__meta {
+    font-size: 12px;
+  }
+}
