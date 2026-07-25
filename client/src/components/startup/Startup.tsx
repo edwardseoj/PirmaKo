@@ -15,9 +15,14 @@
  */
 import { toast } from "sonner"
 import { FileText, PenLine } from "lucide-react"
-import { Navbar } from "./Navbar"
+import { Navbar } from "../shared/Navbar"
 import { UserTypeCard } from "./UserTypeCard"
 import "./Startup.css"
+
+interface StartupProps {
+  /** Called when user picks "Requester" — navigates to homepage. */
+  onRequesterClick?: () => void
+}
 
 /**
  * handleUserTypeSelect — Called when a user type card is clicked.
@@ -25,14 +30,14 @@ import "./Startup.css"
  *
  * @param userType - Either "Requester" or "Signer"
  */
-function handleUserTypeSelect(userType: "Requester" | "Signer") {
-  toast.success(`You selected: ${userType}`, {
-    description: `Welcome, ${userType}! Setting up your experience...`,
+function handleSignerSelect() {
+  toast.success("You selected: Signer", {
+    description: "Welcome, Signer! Setting up your experience...",
     duration: 3000,
   })
 }
 
-export function Startup() {
+export function Startup({ onRequesterClick }: StartupProps = {}) {
   return (
     <div className="startup">
       {/* Navigation bar — icon + "PirmaKo" brand name */}
@@ -54,14 +59,14 @@ export function Startup() {
             title="Requester"
             description="Request documents for signature and track their status"
             icon={FileText}
-            onClick={() => handleUserTypeSelect("Requester")}
+            onClick={onRequesterClick ?? (() => handleSignerSelect())}
           />
 
           <UserTypeCard
             title="Signer"
             description="Review and sign documents sent to you for approval"
             icon={PenLine}
-            onClick={() => handleUserTypeSelect("Signer")}
+            onClick={handleSignerSelect}
           />
         </div>
       </main>

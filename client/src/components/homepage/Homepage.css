@@ -1,0 +1,681 @@
+/* ============================================================
+ * PirmaKo Homepage Screen — Styles
+ *
+ * Matches the Startup.css design system:
+ *   - Same CSS custom properties (colors, shadows, transitions)
+ *   - Dark mode only, indigo accent (#6366f1)
+ *   - Rounded cards, soft shadows, minimalist, Linear-inspired
+ *
+ * Sections:
+ *   1. CSS Variables (shared with Startup.css)
+ *   2. Navbar (shared styles + back button)
+ *   3. Homepage layout
+ *   4. Header & sort dropdown
+ *   5. PDF list & rows
+ *   6. Floating upload button
+ *   7. Empty state
+ *   8. Loading skeleton
+ *   9. Delete confirmation dialog
+ *  10. Responsive breakpoints
+ * ============================================================ */
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 1. CSS Variables — same values used in Startup.css.
+ *    Kept here so Homepage.css is self-contained if imported
+ *    without Startup.css.
+ * ────────────────────────────────────────────────────────────── */
+
+:root {
+  --color-bg-primary: #0f0f1a;
+  --color-bg-secondary: #1a1a2e;
+  --color-bg-tertiary: #16162a;
+  --color-border: #2a2a40;
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #6366f1;
+  --color-accent-hover: #818cf8;
+  --color-accent-glow: rgba(99, 102, 241, 0.15);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover: 0 8px 32px rgba(99, 102, 241, 0.12);
+  --transition-default: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Status-specific colors */
+  --color-status-pending: #f59e0b;
+  --color-status-signed: #22c55e;
+  --color-status-failed: #ef4444;
+  /* Softer background tints for status badges */
+  --color-status-pending-bg: rgba(245, 158, 11, 0.12);
+  --color-status-signed-bg: rgba(34, 197, 94, 0.12);
+  --color-status-failed-bg: rgba(239, 68, 68, 0.12);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 2. Navbar — shared styles + back button addition
+ *    These duplicate the Navbar styles from Startup.css so the
+ *    homepage works even without importing Startup.css.
+ * ────────────────────────────────────────────────────────────── */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+}
+
+.navbar__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
+.navbar__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* Back button — appears in the navbar on the homepage */
+.navbar__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-default);
+  margin-right: 4px;
+  outline: none;
+}
+.navbar__back:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+  background: var(--color-accent-glow);
+}
+.navbar__back:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 3. Homepage layout
+ * ────────────────────────────────────────────────────────────── */
+
+.homepage {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.homepage__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 24px;
+}
+
+.homepage__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 4. Header & sort dropdown
+ * ────────────────────────────────────────────────────────────── */
+
+.homepage__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.homepage__heading {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.homepage__sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: border-color var(--transition-default);
+}
+.homepage__sort:hover {
+  border-color: var(--color-accent);
+}
+
+.homepage__sort-icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.homepage__sort-select {
+  appearance: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  padding-right: 4px;
+}
+.homepage__sort-select option {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 5. PDF list & rows
+ * ────────────────────────────────────────────────────────────── */
+
+.pdf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  /* Allow scrolling if many PDFs exist */
+  max-height: calc(100vh - 200px);
+  padding-right: 4px;
+}
+
+/* Custom scrollbar — thin, matches the dark theme */
+.pdf-list::-webkit-scrollbar {
+  width: 6px;
+}
+.pdf-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pdf-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+.pdf-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* A single PDF row */
+.pdf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  transition: all var(--transition-default);
+  box-shadow: var(--shadow-card);
+  gap: 16px;
+}
+.pdf-row:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+/* Left side — icon + text info */
+.pdf-row__info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pdf-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.pdf-row__details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pdf-row__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+  /* Truncate long titles with an ellipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-row__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Right side — status badge + action buttons */
+.pdf-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Status badge — pill-shaped with color-coded background */
+.pdf-row__status {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pdf-row__status--pending {
+  color: var(--color-status-pending);
+  background: var(--color-status-pending-bg);
+}
+.pdf-row__status--signed {
+  color: var(--color-status-signed);
+  background: var(--color-status-signed-bg);
+}
+.pdf-row__status--failed {
+  color: var(--color-status-failed);
+  background: var(--color-status-failed-bg);
+}
+
+/* Action buttons (download, delete) */
+.pdf-row__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+}
+.pdf-row__btn:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+/* Download button — active (green) when PDF is signed */
+.pdf-row__btn--active {
+  color: var(--color-status-signed);
+  border-color: var(--color-status-signed);
+  background: var(--color-status-signed-bg);
+}
+.pdf-row__btn--active:hover {
+  background: rgba(34, 197, 94, 0.2);
+  transform: scale(1.05);
+}
+
+/* Download button — disabled (grayed out) when not signed */
+.pdf-row__btn--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Delete button — always clickable, red on hover */
+.pdf-row__btn--delete:hover {
+  color: var(--color-status-failed);
+  border-color: var(--color-status-failed);
+  background: var(--color-status-failed-bg);
+  transform: scale(1.05);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 6. Floating upload button
+ * ────────────────────────────────────────────────────────────── */
+
+.homepage__upload-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: none;
+  background: var(--color-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 4px 24px rgba(99, 102, 241, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-default);
+  outline: none;
+  z-index: 40;
+}
+.homepage__upload-btn:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 8px 32px rgba(99, 102, 241, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.homepage__upload-btn:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.1s;
+}
+.homepage__upload-btn:focus-visible {
+  box-shadow:
+    0 0 0 3px var(--color-accent-glow),
+    0 4px 24px rgba(99, 102, 241, 0.35);
+}
+
+/* Hidden file input — off-screen but still accessible */
+.homepage__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 7. Empty state — shown when no PDFs exist
+ * ────────────────────────────────────────────────────────────── */
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 24px;
+}
+
+.empty-state__illustration {
+  opacity: 0.6;
+  transition: opacity var(--transition-default);
+}
+.empty-state__illustration:hover {
+  opacity: 0.8;
+}
+
+.empty-state__text {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 8. Loading skeleton — shimmer placeholders while data loads
+ * ────────────────────────────────────────────────────────────── */
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.skeleton-row__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.skeleton-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.skeleton-row__title {
+  height: 16px;
+  width: 60%;
+  border-radius: 4px;
+}
+
+.skeleton-row__meta {
+  height: 12px;
+  width: 40%;
+  border-radius: 4px;
+}
+
+.skeleton-row__badge {
+  height: 24px;
+  width: 64px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+/* Shimmer animation — a subtle gradient sweep across the skeleton */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-secondary) 0%,
+    var(--color-bg-tertiary) 40%,
+    var(--color-bg-secondary) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 9. Delete confirmation dialog
+ * ────────────────────────────────────────────────────────────── */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.dialog {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.2s ease-out;
+}
+
+.dialog__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--color-status-failed-bg);
+  color: var(--color-status-failed);
+  margin-bottom: 16px;
+}
+
+.dialog__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+}
+
+.dialog__message {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+.dialog__message strong {
+  color: var(--color-text-primary);
+}
+
+.dialog__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.dialog__btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+  border: 1px solid var(--color-border);
+}
+
+.dialog__btn--cancel {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+.dialog__btn--cancel:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+}
+
+.dialog__btn--confirm {
+  background: var(--color-status-failed);
+  color: white;
+  border-color: var(--color-status-failed);
+}
+.dialog__btn--confirm:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+.dialog__btn--confirm:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+/* Dialog entrance animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 10. Responsive breakpoints
+ * ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .homepage__main {
+    padding: 20px 16px;
+  }
+  .homepage__heading {
+    font-size: 22px;
+  }
+  .homepage__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .pdf-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .pdf-row__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .homepage__upload-btn {
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+  }
+  .dialog {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 400px) {
+  .pdf-row__title {
+    font-size: 14px;
+  }
+  .pdf-row__meta {
+    font-size: 12px;
+  }
+}

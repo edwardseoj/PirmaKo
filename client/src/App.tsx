@@ -1,28 +1,47 @@
 /**
- * App — Root component of the PirmaKo application.
+ * App.tsx — Root component and screen router for PirmaKo.
  *
- * What it does:
- * - Renders the Startup screen (the first thing users see).
- * - Provides the SonnerToaster for toast notifications.
+ * Manages navigation between the two main screens:
+ *   1. Startup  — role selection (Requester / Signer)
+ *   2. Homepage — PDF management (Requester view)
  *
- * Architecture:
- *   App
- *   ├── Startup      (the landing screen with navbar + cards)
- *   └── SonnerToaster (renders toast notifications globally)
+ * Uses simple state-based routing (no react-router dependency).
+ * The "activeScreen" state determines which screen is visible.
+ * When a user clicks "Requester" on Startup, we switch to Homepage.
+ * The back button on Navbar returns to Startup.
  */
-import { Startup } from "./components/startup/Startup"
-import { SonnerToaster } from "./components/ui/sonner"
+
+import { useState } from "react";
+import { Startup } from "./components/startup/Startup";
+import { Homepage } from "./components/homepage/Homepage";
+import { SonnerToaster } from "./components/ui/sonner";
+
+/** Available screens in the app. */
+type Screen = "startup" | "homepage";
 
 function App() {
+  // Track which screen is currently active.
+  const [activeScreen, setActiveScreen] = useState<Screen>("startup");
+
   return (
     <>
-      {/* Main application screen */}
-      <Startup />
+      {/* Conditionally render the active screen */}
+      {activeScreen === "startup" && (
+        <Startup
+          onRequesterClick={() => setActiveScreen("homepage")}
+        />
+      )}
 
-      {/* Global toast notification provider — renders notifications in a portal */}
+      {activeScreen === "homepage" && (
+        <Homepage
+          onBack={() => setActiveScreen("startup")}
+        />
+      )}
+
+      {/* Toast notification provider — stays mounted across all screens */}
       <SonnerToaster />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
