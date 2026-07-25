@@ -141,6 +141,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* Add padding to prevent the first PDF row from being cut off on hover */
+  padding-top: 4px;
 }
 
 
@@ -163,7 +165,9 @@
   letter-spacing: -0.5px;
 }
 
+/* Sort dropdown wrapper — positions the menu absolutely below the trigger */
 .homepage__sort {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -177,13 +181,17 @@
   border-color: var(--color-accent);
 }
 
+/* Small arrow icon inside the sort dropdown */
 .homepage__sort-icon {
   color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
-.homepage__sort-select {
-  appearance: none;
+/* Dropdown trigger button — looks like the old <select> but is a <button> */
+.homepage__sort-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   border: none;
   outline: none;
@@ -191,11 +199,74 @@
   font-size: 13px;
   font-family: inherit;
   cursor: pointer;
-  padding-right: 4px;
+  padding: 2px 0;
 }
-.homepage__sort-select option {
+.homepage__sort-trigger:hover {
+  color: var(--color-accent-hover);
+}
+
+/* Small chevron arrow that rotates when dropdown is open */
+.homepage__sort-chevron {
+  transition: transform var(--transition-default);
+  flex-shrink: 0;
+}
+.homepage__sort-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu — floats below the trigger, matches card styling */
+.homepage__sort-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
   background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card);
+  padding: 6px;
+  z-index: 60;
+  animation: sortMenuSlideIn 0.15s ease-out;
+}
+
+/* Each option inside the dropdown menu */
+.homepage__sort-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+}
+.homepage__sort-option:hover {
+  background: var(--color-accent-glow);
   color: var(--color-text-primary);
+}
+
+/* Highlight the currently active sort option */
+.homepage__sort-option--active {
+  color: var(--color-accent);
+  background: var(--color-accent-glow);
+  font-weight: 500;
+}
+
+/* Entrance animation for the dropdown menu */
+@keyframes sortMenuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
@@ -211,6 +282,8 @@
   /* Allow scrolling if many PDFs exist */
   max-height: calc(100vh - 200px);
   padding-right: 4px;
+  /* Add top padding to prevent first item from being cut off on hover */
+  padding-top: 2px;
 }
 
 /* Custom scrollbar — thin, matches the dark theme */
@@ -240,6 +313,8 @@
   transition: all var(--transition-default);
   box-shadow: var(--shadow-card);
   gap: 16px;
+  /* Prevent the row from being clipped when it moves up on hover */
+  margin-top: 1px;
 }
 .pdf-row:hover {
   border-color: var(--color-accent);

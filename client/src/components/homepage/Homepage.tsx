@@ -23,7 +23,7 @@
  *   └── DeleteConfirmDialog (modal confirmation)
  */
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   FileUp,
@@ -179,7 +179,17 @@ export function Homepage({ onBack }: HomepageProps) {
 
 /* ──────────────────────────────────────────────────────────────
  * HomepageHeader — title row + sort dropdown
+ *
+ * Uses a custom dropdown instead of native <select> for consistent
+ * dark-theme styling across all browsers.
  * ────────────────────────────────────────────────────────────── */
+
+/** All available sort options with display labels */
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "newest", label: "Recently Uploaded" },
+  { value: "oldest", label: "Oldest" },
+  { value: "alpha", label: "Alphabetical by Title" },
+];
 
 function HomepageHeader({
   sort,
@@ -188,22 +198,80 @@ function HomepageHeader({
   sort: SortOption;
   onSortChange: (s: SortOption) => void;
 }) {
+  // Track whether the custom dropdown is open or closed
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Close dropdown when clicking outside (via a ref on the wrapper)
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // The currently selected label (shown on the button)
+  const selectedLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Sort";
+
   return (
     <div className="homepage__header">
       <h1 className="homepage__heading">Your PDFs</h1>
 
-      {/* Sort dropdown — wrapped in a styled container */}
-      <div className="homepage__sort">
+      {/* Custom sort dropdown — styled to match Startup.css cards */}
+      <div className="homepage__sort" ref={dropdownRef}>
         <ArrowUpDown size={14} className="homepage__sort-icon" />
-        <select
-          className="homepage__sort-select"
-          value={sort}
-          onChange={(e) => onSortChange(e.target.value as SortOption)}
+
+        {/* Dropdown trigger button */}
+        <button
+          className="homepage__sort-trigger"
+          onClick={() => setIsOpen(!isOpen)}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
         >
-          <option value="newest">Recently Uploaded</option>
-          <option value="oldest">Oldest</option>
-          <option value="alpha">Alphabetical by Title</option>
-        </select>
+          {selectedLabel}
+          {/* Chevron icon that rotates when dropdown is open */}
+          <svg
+            className={`homepage__sort-chevron ${isOpen ? "homepage__sort-chevron--open" : ""}`}
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 4.5L6 7.5L9 4.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        {/* Dropdown menu — shown when isOpen is true */}
+        {isOpen && (
+          <div className="homepage__sort-menu" role="listbox">
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                className={`homepage__sort-option ${sort === option.value ? "homepage__sort-option--active" : ""}`}
+                onClick={() => {
+                  onSortChange(option.value);
+                  setIsOpen(false);
+                }}
+                type="button"
+                role="option"
+                aria-selected={sort === option.value}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
