@@ -16,33 +16,48 @@
  *   7. Popup overlay (glass/blur background)
  *   8. PDF viewer popup (70/30 split layout)
  *   9. PDF editor popup (drag-and-drop signature)
- *  10. Shared popup button styles
- *  11. Responsive breakpoints
+ *  10. Shared popup button styles (ActionButtons, ActionButton)
+ *  11. Upload e-signature button
+ *  12. Confirmation dialog
+ *  13. Popup entrance animations
+ *  14. Responsive breakpoints
  * ============================================================ */
 
 
 /* ──────────────────────────────────────────────────────────────
  * 1. CSS Variables — same values used across all screens.
+ *    These define the app's dark-mode color palette and spacing.
  * ────────────────────────────────────────────────────────────── */
 
 :root {
-  --color-bg-primary: #0f0f1a;
-  --color-bg-secondary: #1a1a2e;
-  --color-bg-tertiary: #16162a;
-  --color-border: #2a2a40;
-  --color-text-primary: #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-accent: #6366f1;
-  --color-accent-hover: #818cf8;
-  --color-accent-glow: rgba(99, 102, 241, 0.15);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
-  --shadow-card-hover: 0 8px 32px rgba(99, 102, 241, 0.12);
+  /* Main backgrounds */
+  --color-bg-primary: #0f0f1a;       /* Page background — very dark blue-gray */
+  --color-bg-secondary: #1a1a2e;     /* Card / surface background */
+  --color-bg-tertiary: #16162a;      /* Navbar / subtle surface background */
+
+  /* Borders */
+  --color-border: #2a2a40;           /* Default border color */
+
+  /* Text colors */
+  --color-text-primary: #e2e8f0;     /* Main text — light gray */
+  --color-text-secondary: #94a3b8;   /* Muted text — medium gray */
+
+  /* Accent color (indigo) */
+  --color-accent: #6366f1;           /* Primary accent — indigo-500 */
+  --color-accent-hover: #818cf8;     /* Accent on hover — indigo-400 */
+  --color-accent-glow: rgba(99, 102, 241, 0.15); /* Subtle glow behind accent elements */
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);           /* Soft shadow for cards */
+  --shadow-card-hover: 0 8px 32px rgba(99, 102, 241, 0.12); /* Glow shadow on hover */
+
+  /* Transition timing — smooth ease-out for all animations */
   --transition-default: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Status-specific colors */
-  --color-status-pending: #f59e0b;
-  --color-status-signed: #22c55e;
-  --color-status-failed: #ef4444;
+  --color-status-pending: #f59e0b;   /* Amber — waiting */
+  --color-status-signed: #22c55e;    /* Green — completed */
+  --color-status-failed: #ef4444;    /* Red — error */
   --color-status-pending-bg: rgba(245, 158, 11, 0.12);
   --color-status-signed-bg: rgba(34, 197, 94, 0.12);
   --color-status-failed-bg: rgba(239, 68, 68, 0.12);
@@ -51,6 +66,8 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 2. Navbar — shared styles + back button
+ *    The navbar sits at the top of the page and stays visible
+ *    when scrolling (position: sticky).
  * ────────────────────────────────────────────────────────────── */
 
 .signer-homepage .navbar {
@@ -60,12 +77,13 @@
   padding: 16px 24px;
   background: var(--color-bg-tertiary);
   border-bottom: 1px solid var(--color-border);
-  position: sticky;
+  position: sticky;             /* Stays at top when scrolling */
   top: 0;
-  z-index: 50;
-  backdrop-filter: blur(12px);
+  z-index: 50;                  /* Above other content */
+  backdrop-filter: blur(12px);  /* Frosted glass effect */
 }
 
+/* Navbar brand icon — the PirmaKo logo square */
 .signer-homepage .navbar__icon {
   display: flex;
   align-items: center;
@@ -77,6 +95,7 @@
   color: var(--color-accent);
 }
 
+/* Navbar brand text — "PirmaKo" */
 .signer-homepage .navbar__title {
   font-size: 20px;
   font-weight: 600;
@@ -84,7 +103,7 @@
   letter-spacing: -0.3px;
 }
 
-/* Back button — appears in the navbar */
+/* Back button — appears in the navbar to return to the startup screen */
 .signer-homepage .navbar__back {
   display: flex;
   align-items: center;
@@ -113,6 +132,7 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 3. Signer homepage layout
+ *    The main container that holds everything below the navbar.
  * ────────────────────────────────────────────────────────────── */
 
 .signer-homepage {
@@ -122,6 +142,7 @@
   flex-direction: column;
 }
 
+/* Centered content area — max-width keeps it readable on large screens */
 .signer-homepage__main {
   flex: 1;
   display: flex;
@@ -133,6 +154,7 @@
   gap: 24px;
 }
 
+/* Scrollable content area — holds either the PDF list or the empty state */
 .signer-homepage__content {
   flex: 1;
   display: flex;
@@ -143,6 +165,8 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 4. Header & sort dropdown
+ *    The header row has the title on the left and the sort
+ *    dropdown on the right.
  * ────────────────────────────────────────────────────────────── */
 
 .signer-header {
@@ -160,8 +184,10 @@
   letter-spacing: -0.5px;
 }
 
-/* Sort dropdown wrapper */
-.signer-header__sort {
+/* ── Sort Dropdown (reusable component) ──────────────────── */
+
+/* Outer wrapper — positions the dropdown menu relative to this */
+.signer-sort-dropdown {
   position: relative;
   display: flex;
   align-items: center;
@@ -172,17 +198,18 @@
   border-radius: 8px;
   transition: border-color var(--transition-default);
 }
-.signer-header__sort:hover {
+.signer-sort-dropdown:hover {
   border-color: var(--color-accent);
 }
 
-.signer-header__sort-icon {
+/* Funnel icon — indicates this is a filter/sort control */
+.signer-sort-dropdown__icon {
   color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
-/* Dropdown trigger button */
-.signer-header__sort-trigger {
+/* Dropdown trigger button — shows current sort label + chevron */
+.signer-sort-dropdown__trigger {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -195,21 +222,21 @@
   cursor: pointer;
   padding: 2px 0;
 }
-.signer-header__sort-trigger:hover {
+.signer-sort-dropdown__trigger:hover {
   color: var(--color-accent-hover);
 }
 
-/* Chevron rotation */
-.signer-header__sort-chevron {
+/* Chevron rotation — rotates 180deg when menu is open */
+.signer-sort-dropdown__chevron {
   transition: transform var(--transition-default);
   flex-shrink: 0;
 }
-.signer-header__sort-chevron--open {
+.signer-sort-dropdown__chevron--open {
   transform: rotate(180deg);
 }
 
-/* Dropdown menu */
-.signer-header__sort-menu {
+/* Dropdown menu — appears below the trigger */
+.signer-sort-dropdown__menu {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -223,8 +250,8 @@
   animation: signerSortMenuSlideIn 0.15s ease-out;
 }
 
-/* Sort option */
-.signer-header__sort-option {
+/* Sort option — individual selectable item in the dropdown */
+.signer-sort-dropdown__option {
   display: block;
   width: 100%;
   text-align: left;
@@ -239,16 +266,18 @@
   transition: all var(--transition-default);
   outline: none;
 }
-.signer-header__sort-option:hover {
+.signer-sort-dropdown__option:hover {
   background: var(--color-accent-glow);
   color: var(--color-text-primary);
 }
-.signer-header__sort-option--active {
+/* Currently active sort option — highlighted with accent color */
+.signer-sort-dropdown__option--active {
   color: var(--color-accent);
   background: var(--color-accent-glow);
   font-weight: 500;
 }
 
+/* Animation: sort menu slides in from above */
 @keyframes signerSortMenuSlideIn {
   from {
     opacity: 0;
@@ -263,13 +292,16 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 5. PDF list & rows
+ *    The scrollable list of PDF entries. Each row is a card
+ *    with an icon, title, date, status badge, and action button.
  * ────────────────────────────────────────────────────────────── */
 
+/* Scrollable list container */
 .signer-pdf-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  overflow-y: auto;
+  overflow-y: auto;            /* Allows scrolling when list is long */
   max-height: calc(100vh - 200px);
   padding-right: 4px;
   padding-top: 2px;
@@ -290,7 +322,7 @@
   background: var(--color-text-secondary);
 }
 
-/* A single PDF row */
+/* A single PDF row — a card with hover effects */
 .signer-pdf-row {
   display: flex;
   align-items: center;
@@ -298,7 +330,7 @@
   padding: 16px 20px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 12px;         /* Rounded corners like Startup cards */
   transition: all var(--transition-default);
   box-shadow: var(--shadow-card);
   gap: 16px;
@@ -307,7 +339,7 @@
 .signer-pdf-row:hover {
   border-color: var(--color-accent);
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-1px);
+  transform: translateY(-1px);  /* Subtle lift on hover */
 }
 
 /* Left side — icon + text info */
@@ -319,6 +351,7 @@
   flex: 1;
 }
 
+/* PDF icon — indigo square with FileText icon */
 .signer-pdf-row__icon {
   display: flex;
   align-items: center;
@@ -331,6 +364,7 @@
   flex-shrink: 0;
 }
 
+/* Title and meta text */
 .signer-pdf-row__details {
   display: flex;
   flex-direction: column;
@@ -379,7 +413,7 @@
   background: var(--color-status-signed-bg);
 }
 
-/* E-sign button — always clickable, accent-colored */
+/* E-sign button — small square with icon, indigo on hover */
 .signer-pdf-row__btn {
   display: flex;
   align-items: center;
@@ -398,7 +432,6 @@
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px var(--color-accent-glow);
 }
-
 /* E-sign button — indigo accent on hover */
 .signer-pdf-row__btn--esign:hover {
   color: var(--color-accent);
@@ -410,6 +443,8 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 6. Empty state
+ *    Shown when there are no PDFs. Displays an illustration
+ *    and a message.
  * ────────────────────────────────────────────────────────────── */
 
 .signer-empty-state {
@@ -439,29 +474,31 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 7. Popup overlay — glass/blur background for modals
+ *    Covers the whole screen with a dark, blurred backdrop.
+ *    Clicking the backdrop closes the popup.
  * ────────────────────────────────────────────────────────────── */
 
 .signer-popup-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0;                    /* Covers the full viewport */
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);  /* Frosted glass effect */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 100;                /* Above everything else */
   animation: signerFadeIn 0.2s ease-out;
 }
 
-/* Shared popup container */
+/* Shared popup container — both viewer and editor use this base */
 .signer-popup {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: 16px;         /* Large rounded corners like Startup cards */
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: signerSlideUp 0.25s ease-out;
   display: flex;
-  overflow: hidden;
+  overflow: hidden;            /* Clips child content to rounded corners */
   width: 90%;
   max-width: 960px;
   height: 70vh;
@@ -471,9 +508,11 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 8. PDF viewer popup — 70/30 split layout
+ *    Left side: scrollable PDF preview area
+ *    Right side: document details + action buttons
  * ────────────────────────────────────────────────────────────── */
 
-/* Left side — PDF preview area (70%) */
+/* Left side — PDF preview area (70% width, scrollable) */
 .signer-viewer-popup__pdf-area {
   flex: 7;
   display: flex;
@@ -482,6 +521,7 @@
   background: var(--color-bg-primary);
   border-right: 1px solid var(--color-border);
   min-width: 0;
+  overflow-y: auto;            /* Make the PDF area scrollable */
 }
 
 /* Placeholder shown until a real PDF renderer is connected */
@@ -494,7 +534,7 @@
   opacity: 0.5;
 }
 
-/* Right side — PDF details + actions (30%) */
+/* Right side — PDF details + actions (30% width) */
 .signer-viewer-popup__details {
   flex: 3;
   display: flex;
@@ -513,7 +553,7 @@
   line-height: 1.3;
 }
 
-/* Detail info block (label + value) */
+/* Detail info block (label + value pair) */
 .signer-viewer-popup__info {
   display: flex;
   flex-direction: column;
@@ -533,7 +573,7 @@
   color: var(--color-text-primary);
 }
 
-/* Action buttons — stacked vertically in the details panel */
+/* Action buttons — pushed to the bottom of the details panel */
 .signer-viewer-popup__actions {
   display: flex;
   flex-direction: column;
@@ -544,13 +584,16 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 9. PDF editor popup — drag-and-drop signature
+ *    The editor has a header, a scrollable canvas area, and
+ *    an action bar at the bottom.
  * ────────────────────────────────────────────────────────────── */
 
-/* Editor canvas area — full width like the viewer */
+/* Editor uses column layout (header → canvas → actions) */
 .signer-editor-popup {
   flex-direction: column;
 }
 
+/* Canvas area — holds the simulated PDF page, scrollable */
 .signer-editor-popup__canvas-area {
   flex: 1;
   display: flex;
@@ -559,7 +602,8 @@
   background: var(--color-bg-primary);
   padding: 24px;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;            /* Make the canvas scrollable */
+  overflow-x: hidden;
 }
 
 /* Simulated PDF page inside the editor */
@@ -568,15 +612,15 @@
   max-width: 500px;
   height: 100%;
   max-height: 500px;
-  background: #ffffff;
+  background: #ffffff;         /* White page like a real PDF */
   border-radius: 4px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-  position: relative;
+  position: relative;          /* Establishes positioning context for the signature */
   padding: 32px;
   overflow: hidden;
 }
 
-/* Simulated text lines on the page */
+/* Simulated text lines on the page — just decorative */
 .signer-editor-popup__page-lines {
   display: flex;
   flex-direction: column;
@@ -598,7 +642,7 @@
 
 /* Draggable signature element */
 .signer-editor-popup__signature {
-  position: absolute;
+  position: absolute;          /* Positioned relative to the .page element */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -609,97 +653,17 @@
   color: var(--color-accent);
   font-size: 12px;
   font-weight: 600;
-  cursor: grab;
-  user-select: none;
+  cursor: grab;                /* Indicates this is draggable */
+  user-select: none;           /* Prevents text selection while dragging */
   transition: box-shadow 0.15s ease;
-  z-index: 10;
+  z-index: 10;                 /* Above the text lines */
 }
 .signer-editor-popup__signature:active {
-  cursor: grabbing;
+  cursor: grabbing;            /* Shows "grabbing" cursor while dragging */
   box-shadow: 0 0 0 4px var(--color-accent-glow);
 }
 
-/* Action buttons — bottom of the editor */
-.signer-editor-popup__actions {
-  display: flex;
-  gap: 10px;
-  padding: 16px 24px;
-  justify-content: flex-end;
-  border-top: 1px solid var(--color-border);
-}
-
-
-/* ──────────────────────────────────────────────────────────────
- * 10. Shared popup button styles
- * ────────────────────────────────────────────────────────────── */
-
-.signer-popup-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all var(--transition-default);
-  outline: none;
-  border: 1px solid var(--color-border);
-  width: 100%;
-}
-
-/* Sign button — green */
-.signer-popup-btn--sign {
-  background: var(--color-status-signed);
-  color: white;
-  border-color: var(--color-status-signed);
-}
-.signer-popup-btn--sign:hover {
-  background: #16a34a;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
-}
-.signer-popup-btn--sign:focus-visible {
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
-}
-
-/* Check button — accent indigo */
-.signer-popup-btn--check {
-  background: var(--color-accent);
-  color: white;
-  border-color: var(--color-accent);
-}
-.signer-popup-btn--check:hover {
-  background: var(--color-accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
-}
-.signer-popup-btn--check:focus-visible {
-  box-shadow: 0 0 0 3px var(--color-accent-glow);
-}
-
-/* Cancel button — red */
-.signer-popup-btn--cancel {
-  background: var(--color-bg-tertiary);
-  color: var(--color-status-failed);
-  border-color: var(--color-status-failed);
-}
-.signer-popup-btn--cancel:hover {
-  background: var(--color-status-failed-bg);
-  transform: translateY(-1px);
-}
-.signer-popup-btn--cancel:focus-visible {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
-}
-
-/* Editor uses row layout for buttons */
-.signer-editor-popup__actions .signer-popup-btn {
-  width: auto;
-}
-
-/* Editor header — shows document title and hint */
+/* Editor header — shows document title and hint text */
 .signer-editor-popup__header {
   display: flex;
   align-items: center;
@@ -723,7 +687,157 @@
 
 
 /* ──────────────────────────────────────────────────────────────
- * 11. Popup entrance animations
+ * 10. Shared popup button styles (ActionButtons component)
+ *     These styles apply to the reusable ActionButton component.
+ * ────────────────────────────────────────────────────────────── */
+
+/* ActionButtons wrapper — flex row with gap */
+.signer-action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Individual action button — circular icon button */
+.signer-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+}
+.signer-action-btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+/* Green (confirm) — outline style by default */
+.signer-action-btn--green {
+  border-color: var(--color-status-signed);
+  color: var(--color-status-signed);
+}
+.signer-action-btn--green:hover {
+  background: var(--color-status-signed-bg);
+  transform: translateY(-1px);
+}
+
+/* Green (confirm) — filled/solid style when filled prop is true */
+.signer-action-btn--green.signer-action-btn--filled {
+  background: var(--color-status-signed);
+  color: white;
+  border-color: var(--color-status-signed);
+}
+.signer-action-btn--green.signer-action-btn--filled:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+}
+
+/* Red (cancel) — outline style */
+.signer-action-btn--red {
+  border-color: var(--color-status-failed);
+  color: var(--color-status-failed);
+}
+.signer-action-btn--red:hover {
+  background: var(--color-status-failed-bg);
+  transform: translateY(-1px);
+}
+
+/* Red (cancel) — filled/solid style */
+.signer-action-btn--red.signer-action-btn--filled {
+  background: var(--color-status-failed);
+  color: white;
+  border-color: var(--color-status-failed);
+}
+.signer-action-btn--red.signer-action-btn--filled:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* Indigo (primary) — outline style */
+.signer-action-btn--indigo {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.signer-action-btn--indigo:hover {
+  background: var(--color-accent-glow);
+  transform: translateY(-1px);
+}
+
+/* Indigo (primary) — filled/solid style */
+.signer-action-btn--indigo.signer-action-btn--filled {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+.signer-action-btn--indigo.signer-action-btn--filled:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 11. Upload e-signature button
+ *     Leftmost button in the editor action bar.
+ *     Uses the FilePlus icon with an indigo color.
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-editor-popup__upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+}
+.signer-editor-popup__upload-btn:hover {
+  background: var(--color-accent);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+.signer-editor-popup__upload-btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 12. Confirmation dialog
+ *     Inline prompt that appears when the user clicks check.
+ *     Asks "Are you sure?" with confirm/cancel icon buttons.
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.signer-confirm__text {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 13. Popup entrance animations
+ *     Smooth fade-in and slide-up for modal popups.
  * ────────────────────────────────────────────────────────────── */
 
 @keyframes signerFadeIn {
@@ -744,9 +858,11 @@
 
 
 /* ──────────────────────────────────────────────────────────────
- * 12. Responsive breakpoints
+ * 14. Responsive breakpoints
+ *     Adjusts layout for smaller screens.
  * ────────────────────────────────────────────────────────────── */
 
+/* Tablet and below: stack the popup vertically */
 @media (max-width: 768px) {
   .signer-popup {
     flex-direction: column;
@@ -772,6 +888,7 @@
   }
 }
 
+/* Mobile: stack header and rows vertically */
 @media (max-width: 640px) {
   .signer-homepage__main {
     padding: 20px 16px;
@@ -808,6 +925,7 @@
   }
 }
 
+/* Small mobile: smaller fonts */
 @media (max-width: 400px) {
   .signer-pdf-row__title {
     font-size: 14px;
