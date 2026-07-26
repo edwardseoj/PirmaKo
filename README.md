@@ -5,23 +5,26 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
 ## Installation
 
 1. Install bun (if not installed):
-   <br>
 
    `curl -fsSL https://bun.sh/install | bash`
 
-<br>
-
 2. Install all dependencies:
-   <br>
-   `cd client && bun install`
-   <br>
-   `cd server && bun install`
+
+   ```bash
+   bun install
+   cd client && bun install
+   cd server && bun install
+   ```
 
 ## How to Run
 
 **Locally**
-`bun run dev`
-<br>
+
+```bash
+bun run dev
+```
+
+> Client runs on `http://localhost:5173` (Vite) and server on `http://localhost:3000` (Elysia).
 
 **Live URL:** https://pirmako-production.up.railway.app/
 
@@ -49,7 +52,7 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
   - Download
   - Delete
   - Status
-- PDF singer side:
+- PDF signer side:
   - Sign
   - Status
 - Sort PDF by filter
