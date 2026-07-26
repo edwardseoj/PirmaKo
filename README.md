@@ -1,6 +1,6 @@
 # PirmaKo
 
-E-Signing Application for Blocklabs' technical interview for Software Developer Intern Application
+E-Signing Application for Blocklabs' technical interview for Software Developer Intern Application   
 
 ## Installation
 
@@ -34,7 +34,7 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
      cd server; bun install
      ```
 
-    > restart terminal after ```bun install```
+    > restart terminal after ```bun install```   
 
 ## How to Run
 
@@ -46,7 +46,7 @@ bun run dev
 
 > Client runs on `http://localhost:5173` (Vite) and server on `http://localhost:3000` (Elysia).
 
-**Live URL:** https://pirmako-production.up.railway.app/
+**Live URL:** https://pirmako-production.up.railway.app/   
 
 ---
 
@@ -60,7 +60,7 @@ bun run dev
   - Password: iamrequester
 - **Signer**
   - Email: signer@gmail.com
-  - Password: iamsigner
+  - Password: iamsigner   
 
 ---
 
@@ -78,7 +78,7 @@ bun run dev
 - Sort PDF by filter
 - Upload e-signature
 - Drag and drop signature
-- Preview PDF before applying changes
+- Preview PDF before applying changes   
 
 ---
 
@@ -99,7 +99,7 @@ bun install
 
 # Run all tests (frontend + backend)
 bun run test
-```
+```   
 
 ---
 
@@ -116,7 +116,7 @@ bun run test:frontend:watch
 
 # Run a specific test file
 bunx vitest run frontend/lib/utils.test.ts
-```
+```   
 
 #### Backend Tests (bun test)
 
