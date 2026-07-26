@@ -1,16 +1,3 @@
-/**
- * Tests for the Login component.
- *
- * Covers:
- *   - Renders email and password fields
- *   - Shows/hides password toggle
- *   - Validates empty fields
- *   - Validates email format
- *   - Submits login form
- *   - Shows error alert on failed login
- *   - Sign up link triggers onSignupClick
- *   - Loading state during submission
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -29,7 +16,7 @@ describe("Login", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
-    // Mock /api/auth/me to return no user
+
     vi.spyOn(global, "fetch").mockImplementation(async (url) => {
       if (typeof url === "string" && url.includes("/api/auth/me")) {
         return new Response(JSON.stringify({ error: "Not authenticated" }));
@@ -87,7 +74,6 @@ describe("Login", () => {
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
-    // Bypass HTML5 email validation by setting noValidate on the form
     const form = container.querySelector("form")!;
     form.setAttribute("novalidate", "");
 

@@ -1,13 +1,3 @@
-/**
- * Tests for the apiFetch() helper function (api.ts).
- *
- * Covers:
- *   - Adding Authorization header when token exists
- *   - Not adding Authorization header when no token
- *   - Passing through custom headers
- *   - Passing through request options
- *   - Merging with existing headers
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { apiFetch } from "@/lib/api";
 

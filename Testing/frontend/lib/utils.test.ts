@@ -1,12 +1,3 @@
-/**
- * Tests for the cn() utility function (utils.ts).
- *
- * Covers:
- *   - Basic class concatenation
- *   - Tailwind class deduplication via twMerge
- *   - Conditional classes
- *   - Empty/falsy inputs
- */
 import { describe, it, expect } from "vitest";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +11,7 @@ describe("cn()", () => {
   });
 
   it("deduplicates conflicting Tailwind classes", () => {
-    // px-4 and px-2 conflict — twMerge keeps the last one
+
     expect(cn("px-4", "px-2")).toBe("px-2");
   });
 
@@ -49,7 +40,7 @@ describe("cn()", () => {
   });
 
   it("deduplicates complex Tailwind class conflicts", () => {
-    // bg-red-500 and bg-blue-500 conflict
+
     expect(cn("bg-red-500", "bg-blue-500")).toBe("bg-blue-500");
   });
 

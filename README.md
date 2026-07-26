@@ -5,35 +5,36 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
 ## Installation
 
 1. Install bun (if not installed):
-   <br>
 
-   `curl -fsSL https://bun.sh/install | bash`
+   **Unix (macOS/Linux):**
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
 
-<br>
+   **Windows (PowerShell):**
+   ```powershell
+   powershell -c "irm bun.sh/install.ps1 | iex"
+   ```
 
 2. Install all dependencies:
-   <br>
-   `cd client && bun install`
-   <br>
-   `cd server && bun install`
+
+   ```bash
+   bun install
+   cd client && bun install
+   cd server && bun install
+   ```
 
 ## How to Run
 
-`bun run dev`
-<br>
+**Locally**
 
-**Live URL:** https://pirmako.up.railway.app
+```bash
+bun run dev
+```
 
-## Deploy to Railway
+> Client runs on `http://localhost:5173` (Vite) and server on `http://localhost:3000` (Elysia).
 
-The project includes a multi-stage Dockerfile for full-stack deployment:
-
-1. Install the Railway CLI: `npm i -g @railway/cli`
-2. Login: `railway login`
-3. Link/create a project: `railway init`
-4. Deploy: `railway up`
-
-Or connect the GitHub repo to Railway for automatic deploys. No environment variables are required — `JWT_SECRET` and `PORT` are handled automatically.
+**Live URL:** https://pirmako-production.up.railway.app/
 
 ---
 
@@ -59,7 +60,7 @@ Or connect the GitHub repo to Railway for automatic deploys. No environment vari
   - Download
   - Delete
   - Status
-- PDF singer side:
+- PDF signer side:
   - Sign
   - Status
 - Sort PDF by filter

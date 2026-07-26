@@ -1,14 +1,3 @@
-/**
- * Tests for the Navbar component.
- *
- * Covers:
- *   - Renders brand name and logo
- *   - Back button shown when onBack is provided
- *   - Back button hidden when onBack is not provided
- *   - Logout button shown when onLogout is provided
- *   - Logout button hidden when onLogout is not provided
- *   - Click handlers fire correctly
- */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { Navbar } from "@/components/shared/Navbar";

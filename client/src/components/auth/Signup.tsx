@@ -1,21 +1,3 @@
-/**
- * Signup.tsx — The signup popup/modal for PirmaKo.
- *
- * What it does:
- *   - Shows as a modal overlay on top of the login screen
- *   - Contains email, password, and re-enter password fields
- *   - Password fields have show/hide toggles (eye/eye-off icons)
- *   - Validates: fields filled, email has "@", passwords match, min 6 chars
- *   - Shows role selection (Requester or Signer) before submitting
- *   - Calls the backend /api/auth/register endpoint
- *   - Shows AlertDialog on errors (duplicate email, weak password, etc.)
- *   - On success, navigates to startup screen with role saved
- *   - Back button in top-left closes the popup
- *
- * Props:
- *   onClose: Called when the user clicks the back button or backdrop
- */
-
 import { useState } from "react";
 import { Eye, EyeOff, ArrowLeft, UserPlus, FileText, PenLine } from "lucide-react";
 import { AlertDialog } from "../ui/alert-dialog";
@@ -29,7 +11,6 @@ interface SignupProps {
 export function Signup({ onClose }: SignupProps) {
   const { register } = useAuth();
 
-  // ── Form state ──────────────────────────────────────────────────
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -38,14 +19,11 @@ export function Signup({ onClose }: SignupProps) {
   const [selectedRole, setSelectedRole] = useState<"requester" | "signer" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ── Alert dialog state ──────────────────────────────────────────
   const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
 
-  // ── Handle signup form submission ───────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate all fields are filled
     if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       setAlert({
         title: "Missing Fields",
@@ -54,7 +32,6 @@ export function Signup({ onClose }: SignupProps) {
       return;
     }
 
-    // Email must contain "@"
     if (!email.includes("@")) {
       setAlert({
         title: "Invalid Email",
@@ -63,7 +40,6 @@ export function Signup({ onClose }: SignupProps) {
       return;
     }
 
-    // Password must be at least 6 characters
     if (password.length < 6) {
       setAlert({
         title: "Weak Password",
@@ -72,7 +48,6 @@ export function Signup({ onClose }: SignupProps) {
       return;
     }
 
-    // Passwords must match
     if (password !== confirmPassword) {
       setAlert({
         title: "Passwords Don't Match",
@@ -81,7 +56,6 @@ export function Signup({ onClose }: SignupProps) {
       return;
     }
 
-    // Role must be selected
     if (!selectedRole) {
       setAlert({
         title: "Select Role",
@@ -93,7 +67,7 @@ export function Signup({ onClose }: SignupProps) {
     setIsSubmitting(true);
     try {
       await register(email, password, selectedRole);
-      // On success, AuthContext updates user → App.tsx routes to startup
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not create account. Please try again.";
       setAlert({
@@ -107,12 +81,9 @@ export function Signup({ onClose }: SignupProps) {
 
   return (
     <div className="auth auth--popup">
-      {/* Backdrop — clicking closes the popup */}
       <div className="auth__backdrop" onClick={onClose} />
 
-      {/* Popup card */}
       <div className="auth__popup" onClick={(e) => e.stopPropagation()}>
-        {/* Back button — top left of the popup */}
         <button className="auth__back" onClick={onClose} type="button" aria-label="Go back">
           <ArrowLeft size={20} strokeWidth={1.75} />
         </button>
@@ -121,7 +92,6 @@ export function Signup({ onClose }: SignupProps) {
           <h1 className="auth__heading">Create Account</h1>
           <p className="auth__subtitle">Sign up for PirmaKo</p>
 
-          {/* Email field */}
           <div className="auth__field">
             <label className="auth__label" htmlFor="signup-email">
               Email
@@ -137,7 +107,6 @@ export function Signup({ onClose }: SignupProps) {
             />
           </div>
 
-          {/* Password field */}
           <div className="auth__field">
             <label className="auth__label" htmlFor="signup-password">
               Password
@@ -163,7 +132,6 @@ export function Signup({ onClose }: SignupProps) {
             </div>
           </div>
 
-          {/* Re-enter password field */}
           <div className="auth__field">
             <label className="auth__label" htmlFor="signup-confirm">
               Re-enter Password
@@ -189,7 +157,6 @@ export function Signup({ onClose }: SignupProps) {
             </div>
           </div>
 
-          {/* Role selection — Requester or Signer cards */}
           <div className="auth__field">
             <label className="auth__label">I am a...</label>
             <div className="auth__roles">
@@ -212,7 +179,6 @@ export function Signup({ onClose }: SignupProps) {
             </div>
           </div>
 
-          {/* Sign up button */}
           <button
             className="auth__button"
             type="submit"
@@ -224,7 +190,6 @@ export function Signup({ onClose }: SignupProps) {
         </form>
       </div>
 
-      {/* Error dialog popup */}
       {alert && (
         <AlertDialog
           title={alert.title}

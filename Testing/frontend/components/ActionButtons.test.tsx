@@ -1,15 +1,3 @@
-/**
- * Tests for the ActionButtons and ActionButton components.
- *
- * Covers:
- *   - Renders children correctly
- *   - Renders with label (pill-shaped)
- *   - Renders without label (icon-only)
- *   - Applies correct color classes
- *   - Applies filled class when filled=true
- *   - Disabled state
- *   - Click handler fires
- */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ActionButtons, ActionButton } from "@/components/signer-homepage/components/ActionButtons";

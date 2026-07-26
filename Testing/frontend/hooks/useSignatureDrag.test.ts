@@ -1,21 +1,8 @@
-/**
- * Tests for the useSignatureDrag hook.
- *
- * Covers:
- *   - Initial position is (0, 0)
- *   - handleDragStart sets up offset tracking
- *   - Mouse move updates position during drag
- *   - Mouse up ends dragging
- *   - Position clamping within container bounds
- *   - resetPosition resets to (0, 0)
- *   - centerPosition centers the signature
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useSignatureDrag, type Position } from "@/components/signer-homepage/hooks/useSignatureDrag";
 import { createRef } from "react";
 
-// Create a mock container element with getBoundingClientRect
 function createMockContainer(width = 500, height = 400) {
   return {
     current: {
@@ -76,7 +63,6 @@ describe("useSignatureDrag", () => {
       result.current.centerPosition();
     });
 
-    // Position should now be centered
     expect(result.current.sigPos.x).toBeGreaterThan(0);
 
     act(() => {
@@ -94,9 +80,6 @@ describe("useSignatureDrag", () => {
       result.current.centerPosition();
     });
 
-    // SIGNATURE_WIDTH = 160, SIGNATURE_HEIGHT = 40
-    // x = (500 - 160) / 2 = 170
-    // y = (400 - 40) / 2 = 180
     expect(result.current.sigPos).toEqual({ x: 170, y: 180 });
   });
 
@@ -104,7 +87,6 @@ describe("useSignatureDrag", () => {
     const container = createMockContainer(300, 200);
     const { result } = renderHook(() => useSignatureDrag(container));
 
-    // Start drag at a position
     act(() => {
       result.current.handleDragStart({
         preventDefault: vi.fn(),
@@ -113,7 +95,6 @@ describe("useSignatureDrag", () => {
       } as unknown as React.MouseEvent);
     });
 
-    // Simulate mouse move beyond container bounds
     act(() => {
       const mouseMoveEvent = new MouseEvent("mousemove", {
         clientX: 1000,
@@ -123,10 +104,6 @@ describe("useSignatureDrag", () => {
       document.dispatchEvent(mouseMoveEvent);
     });
 
-    // Should be clamped to container dimensions minus signature size
-    // SIGNATURE_WIDTH = 160, SIGNATURE_HEIGHT = 40
-    // maxX = 300 - 160 = 140
-    // maxY = 200 - 40 = 160
     expect(result.current.sigPos.x).toBeLessThanOrEqual(140);
     expect(result.current.sigPos.y).toBeLessThanOrEqual(160);
     expect(result.current.sigPos.x).toBeGreaterThanOrEqual(0);

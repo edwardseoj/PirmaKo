@@ -1,20 +1,7 @@
-/**
- * Tests for the useSignerPdfs hook.
- *
- * Covers:
- *   - Initial loading state
- *   - Fetching PDFs and filtering to Pending only
- *   - Sorting
- *   - getPdfInfo function
- *   - signPdf function
- *   - refresh function
- *   - Error handling
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useSignerPdfs } from "@/hooks/useSignerPdfs";
 
-// Mock apiFetch
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
 }));
@@ -54,7 +41,6 @@ describe("useSignerPdfs", () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Should only contain Pending PDFs
     expect(result.current.pdfs).toHaveLength(2);
     expect(result.current.pdfs.every((p) => p.status === "Pending")).toBe(true);
   });
