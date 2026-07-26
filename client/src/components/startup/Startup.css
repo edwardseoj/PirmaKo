@@ -1,0 +1,236 @@
+/* ============================================================
+ * PirmaKo Startup Screen — Styles
+ *
+ * This file contains all CSS for the startup screen components:
+ *   - Navbar (navigation bar at the top)
+ *   - UserTypeCard (clickable role-selection cards)
+ *   - Startup layout (main container and header)
+ *
+ * Design principles:
+ *   - Dark mode only (dark background with light text)
+ *   - Indigo accent color (#6366f1 / Tailwind's indigo-500)
+ *   - Rounded corners, soft shadows, smooth transitions
+ *   - Minimalist, modern look inspired by Notion / Linear
+ * ============================================================ */
+
+/* ============================================================
+ * CSS Custom Properties (Variables)
+ *
+ * These are like constants you define once and reuse everywhere.
+ * The "dark" prefix means these only apply in dark mode.
+ * ============================================================ */
+:root {
+  /* Dark mode color palette */
+  --color-bg-primary: #0f0f1a;       /* Main background — very dark blue-gray */
+  --color-bg-secondary: #1a1a2e;     /* Card / elevated surface background */
+  --color-bg-tertiary: #16162a;      /* Navbar / subtle surface background */
+  --color-border: #2a2a40;           /* Border color for cards and dividers */
+  --color-text-primary: #e2e8f0;     /* Main text color — light gray */
+  --color-text-secondary: #94a3b8;   /* Muted text — medium gray */
+  --color-accent: #6366f1;           /* Accent color — indigo-500 */
+  --color-accent-hover: #818cf8;     /* Accent on hover — indigo-400 (lighter) */
+  --color-accent-glow: rgba(99, 102, 241, 0.15); /* Subtle glow behind accent elements */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25); /* Soft shadow for cards */
+  --shadow-card-hover: 0 8px 32px rgba(99, 102, 241, 0.12); /* Glow shadow on hover */
+  --transition-default: 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth ease-out transition */
+}
+
+/* ============================================================
+ * Navbar — Top navigation bar
+ * ============================================================ */
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;            /* Stays at the top when scrolling */
+  top: 0;
+  z-index: 50;                 /* Ensures it stays above other content */
+  backdrop-filter: blur(12px); /* Frosted glass effect */
+}
+
+.navbar__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
+.navbar__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* ============================================================
+ * Startup — Main layout container
+ * ============================================================ */
+.startup {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.startup__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  gap: 48px;  /* Space between header and cards */
+}
+
+.startup__header {
+  text-align: center;
+  max-width: 480px;
+}
+
+.startup__heading {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.startup__subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ============================================================
+ * Cards container — Holds the two user type cards
+ * Uses CSS flexbox for column layout with gap spacing
+ * ============================================================ */
+.startup__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* ============================================================
+ * UserTypeCard — Clickable card for selecting a user role
+ * ============================================================ */
+.user-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;           /* Large rounded corners */
+  cursor: pointer;
+  transition: all var(--transition-default);
+  box-shadow: var(--shadow-card);
+  outline: none;                  /* Removes default browser focus ring */
+  width: 100%;
+  font-family: inherit;          /* Inherit the app's font */
+}
+
+/* Hover state — card lifts up slightly, border turns accent color */
+.user-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);   /* Subtle upward movement */
+}
+
+/* Active (click) state — card presses down briefly */
+.user-card:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+
+/* Focus-visible — accessible keyboard focus indicator */
+.user-card:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+/* Icon wrapper — circular background behind the Lucide icon */
+.user-card__icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+  margin-bottom: 16px;
+  transition: all var(--transition-default);
+}
+
+/* Icon glows brighter on card hover */
+.user-card:hover .user-card__icon-wrapper {
+  background: rgba(99, 102, 241, 0.2);
+  transform: scale(1.05);
+}
+
+/* Card title — e.g., "Requester" or "Signer" */
+.user-card__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+  letter-spacing: -0.2px;
+}
+
+/* Card description — small muted text below the title */
+.user-card__description {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+/* Arrow indicator — hidden by default, slides in on hover */
+.user-card__arrow {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-8px);
+  opacity: 0;
+  font-size: 18px;
+  color: var(--color-accent);
+  transition: all var(--transition-default);
+}
+
+/* Show and slide arrow on card hover */
+.user-card:hover .user-card__arrow {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ============================================================
+ * Responsive Design — Adjusts for smaller screens
+ * ============================================================ */
+@media (max-width: 480px) {
+  .startup__heading {
+    font-size: 28px;
+  }
+
+  .startup__cards {
+    max-width: 100%;
+  }
+
+  .user-card {
+    padding: 24px 20px;
+  }
+}

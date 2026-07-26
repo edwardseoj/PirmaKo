@@ -1,122 +1,96 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+/**
+ * App.tsx — Root component and screen router for PirmaKo.
+ *
+ * Manages navigation between screens:
+ *   1. Login / Signup — Authentication (shown when not logged in)
+ *   2. Homepage       — PDF management (Requester view)
+ *   3. SignerHomepage — PDF signing (Signer view)
+ *
+ * Uses simple state-based routing (no react-router dependency).
+ * The AuthProvider wraps everything and manages auth state.
+ * After login/signup, the user is routed directly to their
+ * role-based homepage (requester → Homepage, signer → SignerHomepage).
+ * The Startup role-picking screen has been removed — role is
+ * chosen during sign up and stored in JWT + localStorage.
+ */
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useState, useEffect } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Login } from "./components/auth/Login";
+import { Signup } from "./components/auth/Signup";
+import { Homepage } from "./components/homepage/Homepage";
+import { SignerHomepage } from "./components/signer-homepage/SignerHomepage";
+import { SonnerToaster } from "./components/ui/sonner";
 
+/** Inner app component that uses the auth context. */
+function AppInner() {
+  const { user, loading, logout } = useAuth();
+
+  // ── Auth screens ────────────────────────────────────────────────
+  const [showSignup, setShowSignup] = useState(false);
+
+  // Reset to login screen when user logs out or becomes null.
+  // Without this, logging out after signing up would show the Signup popup
+  // instead of returning to the Login screen.
+  useEffect(() => {
+    if (!user) setShowSignup(false);
+  }, [user]);
+
+  // Show a minimal loading state while checking for saved token
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "#0f0f1a",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#94a3b8",
+        fontSize: "14px",
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  // ── Not authenticated — show Login or Signup ────────────────────
+  if (!user) {
+    return (
+      <>
+        {showSignup ? (
+          <Signup onClose={() => setShowSignup(false)} />
+        ) : (
+          <Login onSignupClick={() => setShowSignup(true)} />
+        )}
+      </>
+    );
+  }
+
+  // ── Authenticated — route to homepage based on user role ────────
+  // Role is stored in JWT and localStorage during login/signup.
+  // Requesters see the PDF management view, signers see the PDF signing view.
+  // Back navigation from either homepage triggers logout → returns to login screen.
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      {user.role === "requester" && (
+        <Homepage onBack={logout} />
+      )}
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      {user.role === "signer" && (
+        <SignerHomepage onBack={logout} />
+      )}
     </>
-  )
+  );
 }
 
-export default App
+/** Root component — wraps everything in AuthProvider. */
+function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+      <SonnerToaster />
+    </AuthProvider>
+  );
+}
+
+export default App;

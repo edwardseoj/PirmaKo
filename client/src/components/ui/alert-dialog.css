@@ -1,0 +1,153 @@
+/* ============================================================
+ * AlertDialog Styles — Error/info popup dialog
+ *
+ * Matches the startup screen's dark theme with:
+ *   - Semi-transparent backdrop with blur
+ *   - Dark card with rounded corners
+ *   - Indigo accent for the icon and button
+ *   - Soft shadow and smooth transitions
+ * ============================================================ */
+
+/* Backdrop — covers the whole screen with a dark overlay */
+.alert-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* The dialog card */
+.alert-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.25s ease-out;
+}
+
+/* Warning icon — amber/orange to signal an error */
+.alert-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  margin: 0 auto 16px;
+}
+
+/* Dialog title */
+.alert-card__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+}
+
+/* Error message text */
+.alert-card__message {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+/* ── Action buttons container ─────────────────────────────── */
+/* When multiple buttons are shown (e.g., Delete + Cancel) */
+.alert-card__actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Base button style — shared across all variants ──────── */
+.alert-card__button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-default);
+  font-family: inherit;
+}
+.alert-card__button:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+
+/* Icon inside the button (before the label) */
+.alert-card__button-icon {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* ── Primary (indigo) — default OK button ────────────────── */
+.alert-card__button--primary {
+  background: var(--color-accent);
+  color: white;
+}
+.alert-card__button--primary:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+/* ── Danger (red) — delete/confirm destructive action ────── */
+.alert-card__button--danger {
+  background: var(--color-status-failed);
+  color: white;
+}
+.alert-card__button--danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+.alert-card__button--danger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+/* ── Ghost (transparent) — cancel/dismiss ────────────────── */
+.alert-card__button--ghost {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+.alert-card__button--ghost:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+  transform: translateY(-1px);
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
