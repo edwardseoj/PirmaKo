@@ -28,8 +28,7 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
 
 # Default accounts
 
-> Multiple requester accounts can be created
-<br>
+> Multiple requester accounts can be created   
 > Only 1 signer account is recommended
 
 - **Requester**
