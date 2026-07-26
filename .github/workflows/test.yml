@@ -17,10 +17,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [20]
-
     steps:
       # ── Checkout repository ────────────────────────────────────
       - name: Checkout code
