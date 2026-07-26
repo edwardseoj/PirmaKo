@@ -17,24 +17,23 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
    ```
 
 2. Install all dependencies:
+    **Unix (macOS/Linux):**
+     ```bash
+     bun install
+     cd client && bun install
+     cd server && bun install
+     ```
+  
+    **Windows (PowerShell):**
+    ```bash
+     bun install
+     cd client; bun install
+  
+  
+     cd server; bun install
+     ```
 
-  **Unix (macOS/Linux):**
-   ```bash
-   bun install
-   cd client && bun install
-   cd server && bun install
-   ```
-
-  **Windows (PowerShell):**
-  ```bash
-   bun install
-   cd client; bun install
-
-
-   cd server; bun install
-   ```
-
-> restart terminal after ```bun install```
+    > restart terminal after ```bun install```
 
 ## How to Run
 
