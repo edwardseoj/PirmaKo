@@ -16,7 +16,8 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
    powershell -c "irm bun.sh/install.ps1 | iex"
    ```
 
-2. Install all dependencies:
+2. Install all dependencies:   
+   
     **Unix (macOS/Linux):**
      ```bash
      bun install
