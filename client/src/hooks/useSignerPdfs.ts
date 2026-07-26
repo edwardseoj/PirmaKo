@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { apiFetch } from "../lib/api";
 
 /** Shape of a single PDF record seen by the signer. */
 export interface SignerPdfRecord {
@@ -42,7 +43,7 @@ export function useSignerPdfs() {
     async function load() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/pdfs?sort=${sort}`);
+        const res = await apiFetch(`/api/pdfs?sort=${sort}`);
         const data = await res.json();
         if (!cancelled) {
           // Filter to only show Pending PDFs to the signer
@@ -70,7 +71,7 @@ export function useSignerPdfs() {
    * because the iframe's display size doesn't match the actual PDF page size.
    */
   const getPdfInfo = useCallback(async (id: number) => {
-    const res = await fetch(`/api/pdfs/${id}/info`);
+    const res = await apiFetch(`/api/pdfs/${id}/info`);
     if (!res.ok) throw new Error("Failed to fetch PDF info");
     return res.json() as Promise<{
       id: number;
@@ -95,7 +96,7 @@ export function useSignerPdfs() {
       formData.append("posX", String(posX));
       formData.append("posY", String(posY));
 
-      const res = await fetch(`/api/pdfs/${id}/sign`, {
+      const res = await apiFetch(`/api/pdfs/${id}/sign`, {
         method: "POST",
         body: formData,
       });

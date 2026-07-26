@@ -361,3 +361,159 @@ Verified no `Filter` or `Funnel` icons exist in the codebase:
 - PDF editor: left side takes most space, right sidebar with column buttons ✓
 - Signature offset fixed to match visual position ✓
 - Backend uses idiomatic Bun APIs ✓
+
+---
+
+# Session 4: Authentication System (Login & Signup)
+
+## Overview
+
+Full authentication flow for PirmaKo — login screen, signup popup, JWT token management, and role-based routing. Backend auth endpoints (register, login, me) already existed but were not connected to the frontend.
+
+## Changes Made
+
+### 1. Auth Context (State Management)
+**File:** `client/src/contexts/AuthContext.tsx` (NEW)
+
+- Created `AuthProvider` and `useAuth` hook for centralized auth state
+- Stores user data (id, email, role) and JWT token (persisted in localStorage)
+- `login()` — calls POST /api/auth/login, saves token and user
+- `register()` — calls POST /api/auth/register, saves token and user
+- `logout()` — clears token from localStorage and resets user state
+- On mount, verifies saved token with GET /api/auth/me to restore session
+
+### 2. API Helper
+**File:** `client/src/lib/api.ts` (NEW)
+
+- `apiFetch()` — wraps native fetch() to automatically include Authorization header
+- Reads JWT token from localStorage and adds `Bearer <token>` to all requests
+- Keeps token handling in one place (no duplication across hooks)
+
+### 3. Login Screen
+**File:** `client/src/components/auth/Login.tsx` (NEW)
+
+- Full-page centered card layout (matches Startup screen design)
+- Email and password fields with labels and placeholders
+- Password field has eye/eye-off toggle (show/hide)
+- Client-side validation: fields required, email must contain "@"
+- Calls `useAuth().login()` on submit
+- Shows AlertDialog on errors (wrong credentials, user not found)
+- Clears fields on error per UX requirements
+- "Sign up" link at bottom opens the Signup popup
+
+### 4. Signup Popup
+**File:** `client/src/components/auth/Signup.tsx` (NEW)
+
+- Modal overlay on top of the login screen
+- Email, password, and re-enter password fields
+- Password fields have eye/eye-off toggles
+- Role selection cards (Requester / Signer) — same card style as Startup
+- Client-side validation: all fields required, email "@", passwords match, min 6 chars, role selected
+- Calls `useAuth().register()` on submit
+- Back button (top-left ArrowLeft icon) closes the popup
+- Shows AlertDialog on errors (duplicate email, weak password, etc.)
+
+### 5. AlertDialog Component
+**File:** `client/src/components/ui/alert-dialog.tsx` (NEW)
+
+- Reusable error/info popup dialog
+- Dark card with warning icon, title, message, and OK button
+- Semi-transparent backdrop with blur effect
+- Click backdrop or OK to dismiss
+- Styled to match Startup screen theme
+
+**File:** `client/src/components/ui/alert-dialog.css` (NEW)
+
+- Backdrop: semi-transparent black + blur
+- Card: dark background, rounded corners, soft shadow
+- Icon: amber/orange warning triangle
+- Button: indigo accent, full-width, hover lift effect
+- Animations: fadeIn for backdrop, slideUp for card
+
+### 6. App.tsx Rewrite
+**File:** `client/src/App.tsx` (MODIFIED)
+
+- Wrapped entire app in `AuthProvider`
+- Created `AppInner` component that uses `useAuth()` context
+- Auth flow: loading → login/signup → startup → homepage/signer-homepage
+- Added "loading" state while checking saved token
+- Not authenticated → shows Login (or Signup popup)
+- Authenticated → shows normal app screens (startup, homepage, signer-homepage)
+- Signup popup state managed with `showSignup` boolean
+
+### 7. Auth CSS
+**File:** `client/src/components/auth/Auth.css` (NEW)
+
+- Shared styles for Login and Signup components
+- Full-page layout, centered card, form fields, inputs, buttons
+- Password toggle button positioning
+- Role selection cards (grid layout, selected state with indigo glow)
+- Signup popup overlay (backdrop + centered card)
+- Back button styling (top-left of popup)
+- Animations: fadeIn, slideUp
+- Responsive breakpoints for mobile
+
+### 8. API Hooks Updated
+**File:** `client/src/hooks/usePdfFiles.ts` (MODIFIED)
+
+- Replaced all `fetch()` calls with `apiFetch()` for auth headers
+- Affected methods: load, upload, remove, download, updateStatus
+
+**File:** `client/src/hooks/useSignerPdfs.ts` (MODIFIED)
+
+- Replaced all `fetch()` calls with `apiFetch()` for auth headers
+- Affected methods: load, getPdfInfo, signPdf
+
+**File:** `client/src/components/signer-homepage/SignerHomepage.tsx` (MODIFIED)
+
+- Added `apiFetch` import from `../../lib/api`
+- Replaced `fetch()` with `apiFetch()` in preview endpoint call
+
+---
+
+## Modified Files (Session 4)
+
+| File | Location | Changes |
+|------|----------|---------|
+| `App.tsx` | `client/src/` | Wrapped in AuthProvider, added auth flow routing |
+| `usePdfFiles.ts` | `client/src/hooks/` | All fetch() → apiFetch() for auth headers |
+| `useSignerPdfs.ts` | `client/src/hooks/` | All fetch() → apiFetch() for auth headers |
+| `SignerHomepage.tsx` | `client/src/components/signer-homepage/` | Added apiFetch import, preview call updated |
+| `requirements.txt` | root | Added @elysiajs/jwt, pdf-lib |
+
+---
+
+## New Files (Session 4)
+
+| File | Location | Purpose |
+|------|----------|---------|
+| `AuthContext.tsx` | `client/src/contexts/` | Auth state management (user, token, login, register, logout) |
+| `api.ts` | `client/src/lib/` | Authenticated fetch wrapper (auto-includes Bearer token) |
+| `Login.tsx` | `client/src/components/auth/` | Login screen (email, password, sign up link) |
+| `Signup.tsx` | `client/src/components/auth/` | Signup popup (email, password, role selection) |
+| `Auth.css` | `client/src/components/auth/` | Shared auth screen styles |
+| `alert-dialog.tsx` | `client/src/components/ui/` | Reusable error dialog component |
+| `alert-dialog.css` | `client/src/components/ui/` | Error dialog styles |
+
+---
+
+## Auth Flow
+
+1. **App Start** → AuthProvider checks localStorage for saved token
+2. **No Token** → Shows Login screen
+3. **Login** → User enters email + password → POST /api/auth/login → token saved → user state set → routes to Startup
+4. **Signup** → User fills form + picks role → POST /api/auth/register → token saved → user state set → routes to Startup
+5. **Startup** → User picks Requester or Signer → routes to appropriate homepage
+6. **Logout** → Clears token and user state → returns to Login screen
+
+---
+
+## Design Compliance
+
+- Dark mode only (matches Startup.css variables) ✓
+- Indigo accent (#6366f1) ✓
+- Rounded cards, soft shadows, smooth transitions ✓
+- Password show/hide toggles (eye/eye-off) ✓
+- AlertDialog styled like Startup theme ✓
+- Responsive design ✓
+- Comments in all new files ✓

@@ -1,0 +1,107 @@
+/* ============================================================
+ * AlertDialog Styles — Error/info popup dialog
+ *
+ * Matches the startup screen's dark theme with:
+ *   - Semi-transparent backdrop with blur
+ *   - Dark card with rounded corners
+ *   - Indigo accent for the icon and button
+ *   - Soft shadow and smooth transitions
+ * ============================================================ */
+
+/* Backdrop — covers the whole screen with a dark overlay */
+.alert-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* The dialog card */
+.alert-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.25s ease-out;
+}
+
+/* Warning icon — amber/orange to signal an error */
+.alert-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  margin: 0 auto 16px;
+}
+
+/* Dialog title */
+.alert-card__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+}
+
+/* Error message text */
+.alert-card__message {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+/* OK button — matches the startup card accent style */
+.alert-card__button {
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-default);
+  font-family: inherit;
+}
+
+.alert-card__button:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.alert-card__button:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

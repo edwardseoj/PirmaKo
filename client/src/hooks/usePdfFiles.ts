@@ -15,6 +15,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { apiFetch } from "../lib/api";
 
 /** Shape of a single PDF record as returned by the API. */
 export interface PdfRecord {
@@ -44,7 +45,7 @@ export function usePdfFiles() {
     async function load() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/pdfs?sort=${sort}`);
+        const res = await apiFetch(`/api/pdfs?sort=${sort}`);
         const data = await res.json();
         if (!cancelled) setPdfs(data.pdfs ?? []);
       } catch (err) {
@@ -65,7 +66,7 @@ export function usePdfFiles() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/pdfs", {
+      const res = await apiFetch("/api/pdfs", {
         method: "POST",
         body: formData,
       });
@@ -81,7 +82,7 @@ export function usePdfFiles() {
   // ── Delete a PDF ──────────────────────────────────────────────
   // Sends a DELETE request, then triggers a re-fetch.
   const remove = useCallback(async (id: number) => {
-    const res = await fetch(`/api/pdfs/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/pdfs/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Delete failed");
     setFetchKey((k) => k + 1);
   }, []);
@@ -90,7 +91,7 @@ export function usePdfFiles() {
   // Triggers a file download in the browser using a temporary <a> tag.
   const download = useCallback(
     async (id: number, title: string) => {
-      const res = await fetch(`/api/pdfs/${id}/download`);
+      const res = await apiFetch(`/api/pdfs/${id}/download`);
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();
@@ -111,7 +112,7 @@ export function usePdfFiles() {
   // When status is "Signed", the backend removes the PDF from the database.
   const updateStatus = useCallback(
     async (id: number, status: "Pending" | "Signed" | "Failed") => {
-      const res = await fetch(`/api/pdfs/${id}/status`, {
+      const res = await apiFetch(`/api/pdfs/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),

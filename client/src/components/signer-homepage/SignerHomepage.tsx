@@ -40,6 +40,7 @@ import {
   type SignerPdfRecord,
 } from "../../hooks/useSignerPdfs";
 import { usePdfRenderer } from "../../hooks/usePdfRenderer";
+import { apiFetch } from "../../lib/api";
 import { PopupOverlay } from "./components/PopupOverlay";
 import { ActionButtons, ActionButton } from "./components/ActionButtons";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -548,7 +549,7 @@ function PdfEditorPopup({
       formData.append("posX", String(posX));
       formData.append("posY", String(posY));
 
-      const res = await fetch(`/api/pdfs/${pdf.id}/preview`, {
+      const res = await apiFetch(`/api/pdfs/${pdf.id}/preview`, {
         method: "POST",
         body: formData,
       });
