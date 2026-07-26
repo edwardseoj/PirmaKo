@@ -1,22 +1,5 @@
-/**
- * Global Styles — PirmaKo Application
- *
- * This file sets up the base styles for the entire app:
- *   - Imports Tailwind CSS (utility-first CSS framework)
- *   - Sets the dark color scheme
- *   - Defines the base font and background color
- *   - Provides the global reset for body and box-sizing
- */
-
-/* Import Tailwind CSS — gives you utility classes like "flex", "p-4", etc. */
 @import "tailwindcss";
 
-/* ============================================================
- * Dark Mode Base Styles
- *
- * "color-scheme: dark" tells the browser this page is dark.
- * This affects scrollbars, form controls, and other OS-level UI.
- * ============================================================ */
 :root {
   color-scheme: dark;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -24,27 +7,21 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ============================================================
- * Global Reset
- *
- * These ensure consistent styling across all browsers.
- * ============================================================ */
 *,
 *::before,
 *::after {
-  box-sizing: border-box;  /* Makes padding/border included in element width */
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
   min-height: 100vh;
-  background: #0f0f1a;    /* Matches the startup screen's dark background */
+  background: #0f0f1a;
   color: #e2e8f0;
   line-height: 1.5;
 }
 
-/* Root container — ensures full height for React's rendering */
 #root {
   min-height: 100vh;
 }

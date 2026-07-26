@@ -1,18 +1,5 @@
-/**
- * Backend test helpers — shared utilities for server-side tests.
- *
- * Provides:
- *   - A fresh in-memory SQLite database for each test suite
- *   - Helper functions for seeding test data
- *   - Elysia test client utilities
- */
-
 import { Database } from "bun:sqlite";
 
-/**
- * Create a fresh in-memory SQLite database with the same schema as production.
- * Each test suite should call this in beforeAll/beforeEach for isolation.
- */
 export function createTestDb(): Database {
   const db = new Database(":memory:");
 
@@ -43,10 +30,6 @@ export function createTestDb(): Database {
   return db;
 }
 
-/**
- * Seed a test user into the database.
- * Returns the inserted user's ID.
- */
 export async function seedUser(
   db: Database,
   email: string,
@@ -60,10 +43,6 @@ export async function seedUser(
   return Number(result.lastInsertRowid);
 }
 
-/**
- * Seed a test PDF into the database.
- * Returns the inserted PDF's ID.
- */
 export function seedPdf(
   db: Database,
   title: string,

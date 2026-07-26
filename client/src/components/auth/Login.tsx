@@ -1,19 +1,3 @@
-/**
- * Login.tsx — The login screen for PirmaKo.
- *
- * What it does:
- *   - Shows email and password fields in a centered card layout
- *   - Password field has a show/hide toggle (eye/eye-off icons)
- *   - Validates that both fields are filled and email contains "@"
- *   - Calls the backend /api/auth/login endpoint
- *   - Shows an AlertDialog if credentials are wrong or user doesn't exist
- *   - On success, navigates to the startup screen (handled by App.tsx via AuthContext)
- *   - Has a "Sign up" link that opens the Signup popup
- *
- * Props:
- *   onSignupClick: Called when the user wants to open the signup popup
- */
-
 import { useState } from "react";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { Navbar } from "../shared/Navbar";
@@ -28,22 +12,18 @@ interface LoginProps {
 export function Login({ onSignupClick }: LoginProps) {
   const { login } = useAuth();
 
-  // ── Form state ──────────────────────────────────────────────────
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ── Alert dialog state ──────────────────────────────────────────
   const [alert, setAlert] = useState<{ title: string; message: string } | null>(
     null,
   );
 
-  // ── Handle login form submission ────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation: both fields must be filled
     if (!email.trim() || !password.trim()) {
       setAlert({
         title: "Missing Fields",
@@ -52,7 +32,6 @@ export function Login({ onSignupClick }: LoginProps) {
       return;
     }
 
-    // Email must contain "@"
     if (!email.includes("@")) {
       setAlert({
         title: "Invalid Email",
@@ -64,14 +43,14 @@ export function Login({ onSignupClick }: LoginProps) {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      // On success, AuthContext updates user state → App.tsx switches to startup
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Invalid email or password. Please try again.";
       setAlert({
         title: "Login Failed",
         message,
       });
-      // Clear fields on error per UX requirements
+
       setEmail("");
       setPassword("");
     } finally {
@@ -84,12 +63,10 @@ export function Login({ onSignupClick }: LoginProps) {
       <Navbar />
 
       <main className="auth__main">
-        {/* Login card */}
         <form className="auth__card" onSubmit={handleSubmit}>
           <h1 className="auth__heading">Welcome back</h1>
           <p className="auth__subtitle">Sign in to your PirmaKo account</p>
 
-          {/* Email field */}
           <div className="auth__field">
             <label className="auth__label" htmlFor="login-email">
               Email
@@ -105,7 +82,6 @@ export function Login({ onSignupClick }: LoginProps) {
             />
           </div>
 
-          {/* Password field with show/hide toggle */}
           <div className="auth__field">
             <label className="auth__label" htmlFor="login-password">
               Password
@@ -131,7 +107,6 @@ export function Login({ onSignupClick }: LoginProps) {
             </div>
           </div>
 
-          {/* Login button */}
           <button
             className="auth__button"
             type="submit"
@@ -141,7 +116,6 @@ export function Login({ onSignupClick }: LoginProps) {
             {isSubmitting ? "Logging in..." : "Log In"}
           </button>
 
-          {/* Sign up link — small text below the button */}
           <p className="auth__switch">
             Don't have an account?{" "}
             <button

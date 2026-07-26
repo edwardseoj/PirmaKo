@@ -1,20 +1,7 @@
-/**
- * auth.routes.ts — Authentication API routes.
- *
- * Endpoints:
- *   POST /api/auth/register — Create a new user account
- *   POST /api/auth/login    — Authenticate and return a JWT
- *   GET  /api/auth/me       — Get the current authenticated user (requires Bearer token)
- *
- * Uses Bun.password for bcrypt hashing (zero extra deps).
- * Uses @elysiajs/jwt for token generation and verification.
- */
-
 import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import db from "../db/database";
 
-// JWT secret — in production, use an env variable.
 const JWT_SECRET = process.env.JWT_SECRET || "pirmako-dev-secret-change-in-prod";
 
 export const authRoutes = new Elysia({ prefix: "/api/auth" })
@@ -22,14 +9,11 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     jwt({
       name: "jwt",
       secret: JWT_SECRET,
-      // Store JWT in an HTTP cookie for persistence across browser restarts.
-      // The cookie is HttpOnly (not accessible via JavaScript) and SameSite=Lax.
-      // Max-Age: 7 days (604800 seconds).
+
       cookie: "pirmako_auth",
     })
   )
 
-  // ── REGISTER ───────────────────────────────────────────────────
   .post("/register", async ({ body, jwt }) => {
     const { email, password, role } = body as {
       email: string;
@@ -53,13 +37,11 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
       return { error: "Password must be at least 6 characters" };
     }
 
-    // Check if email is already taken
     const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
     if (existing) {
       return { error: "An account with this email already exists" };
     }
 
-    // Hash password with Bun's built-in bcrypt
     const hashedPassword = await Bun.password.hash(password);
 
     const stmt = db.prepare(
@@ -67,7 +49,6 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     );
     const result = stmt.run(email, hashedPassword, role);
 
-    // Generate JWT — includes id, email, role
     const token = await jwt.sign({
       id: result.lastInsertRowid,
       email,
@@ -80,7 +61,6 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     };
   })
 
-  // ── LOGIN ──────────────────────────────────────────────────────
   .post("/login", async ({ body, jwt }) => {
     const { email, password } = body as { email: string; password: string };
 
@@ -110,8 +90,6 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     };
   })
 
-  // ── GET CURRENT USER ───────────────────────────────────────────
-  // Requires: Authorization: Bearer <token>
   .get("/me", async ({ jwt, request }) => {
     const authHeader = request.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -137,15 +115,12 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     return { user };
   })
 
-  // ── LOGOUT ─────────────────────────────────────────────────────
-  // Clears the JWT cookie so the user is no longer authenticated.
-  // The client also clears localStorage on its side.
   .get("/logout", () => {
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        // Clear the cookie by setting it to empty with Max-Age=0
+
         "Set-Cookie": "pirmako_auth=; Path=/; Max-Age=0; SameSite=Lax",
       },
     });

@@ -1,14 +1,3 @@
-/**
- * Tests for the AlertDialog component.
- *
- * Covers:
- *   - Renders title and message
- *   - Default OK button calls onClose
- *   - Custom actions render correctly
- *   - Backdrop click triggers onClose
- *   - Card click does not trigger onClose (stopPropagation)
- *   - Custom icon renders instead of default
- */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { AlertDialog } from "@/components/ui/alert-dialog";

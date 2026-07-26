@@ -1,13 +1,3 @@
-/**
- * Tests for auth.routes.ts — Authentication API endpoints.
- *
- * Covers:
- *   POST /api/auth/register — validation, duplicate email, success
- *   POST /api/auth/login    — validation, wrong credentials, success
- *   GET  /api/auth/me       — valid token, invalid token, missing token
- *   GET  /api/auth/logout   — clears cookie
- */
-
 import { describe, it, expect, beforeAll, beforeEach } from "bun:test";
 import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
@@ -17,7 +7,6 @@ import { createTestDb, seedUser } from "../helpers";
 
 let testDb: Database;
 
-// Build a test app with auth routes
 function buildTestApp(db: Database) {
   const JWT_SECRET = "test-secret-key";
 
@@ -30,7 +19,6 @@ function buildTestApp(db: Database) {
       })
     )
 
-    // ── Register ──
     .post("/api/auth/register", async ({ body, jwt }: any) => {
       const { email, password, role } = body as {
         email: string;
@@ -77,7 +65,6 @@ function buildTestApp(db: Database) {
       };
     })
 
-    // ── Login ──
     .post("/api/auth/login", async ({ body, jwt }: any) => {
       const { email, password } = body as { email: string; password: string };
 
@@ -107,7 +94,6 @@ function buildTestApp(db: Database) {
       };
     })
 
-    // ── Me ──
     .get("/api/auth/me", async ({ jwt, request }: any) => {
       const authHeader = request.headers.get("Authorization");
       if (!authHeader?.startsWith("Bearer ")) {
@@ -133,7 +119,6 @@ function buildTestApp(db: Database) {
       return { user };
     })
 
-    // ── Logout ──
     .get("/api/auth/logout", () => {
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
@@ -155,12 +140,10 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  // Clear tables between tests
+
   testDb.exec("DELETE FROM users");
   testDb.exec("DELETE FROM pdfs");
 });
-
-// ── REGISTER ────────────────────────────────────────────────────
 
 describe("POST /api/auth/register", () => {
   it("registers a new user successfully", async () => {
@@ -284,8 +267,6 @@ describe("POST /api/auth/register", () => {
   });
 });
 
-// ── LOGIN ───────────────────────────────────────────────────────
-
 describe("POST /api/auth/login", () => {
   it("logs in with valid credentials", async () => {
     await seedUser(testDb, "user@test.com", "password123", "requester");
@@ -355,13 +336,10 @@ describe("POST /api/auth/login", () => {
   });
 });
 
-// ── ME ──────────────────────────────────────────────────────────
-
 describe("GET /api/auth/me", () => {
   it("returns user with valid token", async () => {
     await seedUser(testDb, "user@test.com", "password123", "signer");
 
-    // First login to get a token
     const loginRes = await app.handle(
       new Request("http://localhost/api/auth/login", {
         method: "POST",
@@ -403,7 +381,6 @@ describe("GET /api/auth/me", () => {
     );
     const data = await res.json();
 
-    // Invalid token either fails verification or references a non-existent user
     expect(data.error).toBeDefined();
     expect(data.user).toBeUndefined();
   });
@@ -419,8 +396,6 @@ describe("GET /api/auth/me", () => {
     expect(data.error).toBe("Not authenticated");
   });
 });
-
-// ── LOGOUT ──────────────────────────────────────────────────────
 
 describe("GET /api/auth/logout", () => {
   it("returns success and clears cookie", async () => {

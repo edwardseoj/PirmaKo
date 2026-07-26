@@ -1,14 +1,3 @@
-/**
- * Tests for the SortDropdown component.
- *
- * Covers:
- *   - Renders current sort label
- *   - Opens dropdown on click
- *   - Shows all sort options
- *   - Calls onSortChange when option selected
- *   - Closes dropdown after selection
- *   - Active option has correct aria-selected
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SortDropdown } from "@/components/signer-homepage/components/SortDropdown";

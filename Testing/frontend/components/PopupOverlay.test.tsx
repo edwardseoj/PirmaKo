@@ -1,11 +1,3 @@
-/**
- * Tests for the PopupOverlay component.
- *
- * Covers:
- *   - Renders children
- *   - Backdrop click triggers onClose
- *   - Content click does not trigger onClose (stopPropagation)
- */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { PopupOverlay } from "@/components/signer-homepage/components/PopupOverlay";

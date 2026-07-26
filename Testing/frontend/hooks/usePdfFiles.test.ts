@@ -1,23 +1,7 @@
-/**
- * Tests for the usePdfFiles hook.
- *
- * Covers:
- *   - Initial loading state
- *   - Fetching PDFs on mount
- *   - Sorting PDFs
- *   - Upload triggers re-fetch
- *   - Delete triggers re-fetch
- *   - Download calls fetch with correct URL
- *   - Update status triggers re-fetch
- *   - Refresh function
- *   - Requester email filtering
- *   - Error handling
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { usePdfFiles } from "@/hooks/usePdfFiles";
 
-// Mock apiFetch
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
 }));

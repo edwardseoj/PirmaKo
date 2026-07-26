@@ -1,31 +1,3 @@
-/* ============================================================
- * PirmaKo Homepage Screen — Styles
- *
- * Matches the Startup.css design system:
- *   - Same CSS custom properties (colors, shadows, transitions)
- *   - Dark mode only, indigo accent (#6366f1)
- *   - Rounded cards, soft shadows, minimalist, Linear-inspired
- *
- * Sections:
- *   1. CSS Variables (shared with Startup.css)
- *   2. Navbar (shared styles + back button)
- *   3. Homepage layout
- *   4. Header & sort dropdown
- *   5. PDF list & rows
- *   6. Floating upload button
- *   7. Empty state
- *   8. Loading skeleton
- *   9. Delete confirmation dialog
- *  10. Responsive breakpoints
- * ============================================================ */
-
-
-/* ──────────────────────────────────────────────────────────────
- * 1. CSS Variables — same values used in Startup.css.
- *    Kept here so Homepage.css is self-contained if imported
- *    without Startup.css.
- * ────────────────────────────────────────────────────────────── */
-
 :root {
   --color-bg-primary: #0f0f1a;
   --color-bg-secondary: #1a1a2e;
@@ -40,22 +12,14 @@
   --shadow-card-hover: 0 8px 32px rgba(99, 102, 241, 0.12);
   --transition-default: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Status-specific colors */
   --color-status-pending: #f59e0b;
   --color-status-signed: #22c55e;
   --color-status-failed: #ef4444;
-  /* Softer background tints for status badges */
+
   --color-status-pending-bg: rgba(245, 158, 11, 0.12);
   --color-status-signed-bg: rgba(34, 197, 94, 0.12);
   --color-status-failed-bg: rgba(239, 68, 68, 0.12);
 }
-
-
-/* ──────────────────────────────────────────────────────────────
- * 2. Navbar — shared styles + back button addition
- *    These duplicate the Navbar styles from Startup.css so the
- *    homepage works even without importing Startup.css.
- * ────────────────────────────────────────────────────────────── */
 
 .navbar {
   display: flex;
@@ -88,7 +52,6 @@
   letter-spacing: -0.3px;
 }
 
-/* Back button — appears in the navbar on the homepage */
 .navbar__back {
   display: flex;
   align-items: center;
@@ -114,11 +77,6 @@
   box-shadow: 0 0 0 3px var(--color-accent-glow);
 }
 
-
-/* ──────────────────────────────────────────────────────────────
- * 3. Homepage layout
- * ────────────────────────────────────────────────────────────── */
-
 .homepage {
   min-height: 100vh;
   background: var(--color-bg-primary);
@@ -141,14 +99,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  /* Add padding to prevent the first PDF row from being cut off on hover */
+
   padding-top: 4px;
 }
-
-
-/* ──────────────────────────────────────────────────────────────
- * 4. Header & sort dropdown
- * ────────────────────────────────────────────────────────────── */
 
 .homepage__header {
   display: flex;
@@ -165,7 +118,6 @@
   letter-spacing: -0.5px;
 }
 
-/* Sort dropdown wrapper — positions the menu absolutely below the trigger */
 .homepage__sort {
   position: relative;
   display: flex;
@@ -181,13 +133,11 @@
   border-color: var(--color-accent);
 }
 
-/* Small arrow icon inside the sort dropdown */
 .homepage__sort-icon {
   color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
-/* Dropdown trigger button — looks like the old <select> but is a <button> */
 .homepage__sort-trigger {
   display: flex;
   align-items: center;
@@ -205,7 +155,6 @@
   color: var(--color-accent-hover);
 }
 
-/* Small chevron arrow that rotates when dropdown is open */
 .homepage__sort-chevron {
   transition: transform var(--transition-default);
   flex-shrink: 0;
@@ -214,7 +163,6 @@
   transform: rotate(180deg);
 }
 
-/* Dropdown menu — floats below the trigger, matches card styling */
 .homepage__sort-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -229,7 +177,6 @@
   animation: sortMenuSlideIn 0.15s ease-out;
 }
 
-/* Each option inside the dropdown menu */
 .homepage__sort-option {
   display: block;
   width: 100%;
@@ -250,14 +197,12 @@
   color: var(--color-text-primary);
 }
 
-/* Highlight the currently active sort option */
 .homepage__sort-option--active {
   color: var(--color-accent);
   background: var(--color-accent-glow);
   font-weight: 500;
 }
 
-/* Entrance animation for the dropdown menu */
 @keyframes sortMenuSlideIn {
   from {
     opacity: 0;
@@ -269,24 +214,18 @@
   }
 }
 
-
-/* ──────────────────────────────────────────────────────────────
- * 5. PDF list & rows
- * ────────────────────────────────────────────────────────────── */
-
 .pdf-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
-  /* Allow scrolling if many PDFs exist */
+
   max-height: calc(100vh - 200px);
   padding-right: 4px;
-  /* Add top padding to prevent first item from being cut off on hover */
+
   padding-top: 2px;
 }
 
-/* Custom scrollbar — thin, matches the dark theme */
 .pdf-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -301,7 +240,6 @@
   background: var(--color-text-secondary);
 }
 
-/* A single PDF row */
 .pdf-row {
   display: flex;
   align-items: center;
@@ -313,7 +251,7 @@
   transition: all var(--transition-default);
   box-shadow: var(--shadow-card);
   gap: 16px;
-  /* Prevent the row from being clipped when it moves up on hover */
+
   margin-top: 1px;
 }
 .pdf-row:hover {
@@ -322,7 +260,6 @@
   transform: translateY(-1px);
 }
 
-/* Left side — icon + text info */
 .pdf-row__info {
   display: flex;
   align-items: center;
@@ -355,7 +292,7 @@
   font-weight: 600;
   color: var(--color-text-primary);
   letter-spacing: -0.2px;
-  /* Truncate long titles with an ellipsis */
+
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -366,7 +303,6 @@
   color: var(--color-text-secondary);
 }
 
-/* Right side — status badge + action buttons */
 .pdf-row__actions {
   display: flex;
   align-items: center;
@@ -374,7 +310,6 @@
   flex-shrink: 0;
 }
 
-/* Status badge — pill-shaped with color-coded background */
 .pdf-row__status {
   font-size: 12px;
   font-weight: 500;
@@ -396,7 +331,6 @@
   background: var(--color-status-failed-bg);
 }
 
-/* Action buttons (download, delete) */
 .pdf-row__btn {
   display: flex;
   align-items: center;
@@ -416,7 +350,6 @@
   box-shadow: 0 0 0 3px var(--color-accent-glow);
 }
 
-/* Download button — active (green) when PDF is signed */
 .pdf-row__btn--active {
   color: var(--color-status-signed);
   border-color: var(--color-status-signed);
@@ -427,24 +360,17 @@
   transform: scale(1.05);
 }
 
-/* Download button — disabled (grayed out) when not signed */
 .pdf-row__btn--disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-/* Delete button — always clickable, red on hover */
 .pdf-row__btn--delete:hover {
   color: var(--color-status-failed);
   border-color: var(--color-status-failed);
   background: var(--color-status-failed-bg);
   transform: scale(1.05);
 }
-
-
-/* ──────────────────────────────────────────────────────────────
- * 6. Floating upload button
- * ────────────────────────────────────────────────────────────── */
 
 .homepage__upload-btn {
   position: fixed;
@@ -484,7 +410,6 @@
     0 4px 24px rgba(99, 102, 241, 0.35);
 }
 
-/* Hidden file input — off-screen but still accessible */
 .homepage__file-input {
   position: absolute;
   width: 1px;
@@ -495,11 +420,6 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
-
-
-/* ──────────────────────────────────────────────────────────────
- * 7. Empty state — shown when no PDFs exist
- * ────────────────────────────────────────────────────────────── */
 
 .empty-state {
   flex: 1;
@@ -524,11 +444,6 @@
   color: var(--color-text-secondary);
   margin: 0;
 }
-
-
-/* ──────────────────────────────────────────────────────────────
- * 8. Loading skeleton — shimmer placeholders while data loads
- * ────────────────────────────────────────────────────────────── */
 
 .skeleton-row {
   display: flex;
@@ -573,7 +488,6 @@
   flex-shrink: 0;
 }
 
-/* Shimmer animation — a subtle gradient sweep across the skeleton */
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
@@ -593,11 +507,6 @@
     background-position: -200% 0;
   }
 }
-
-
-/* ──────────────────────────────────────────────────────────────
- * 9. Delete confirmation dialog
- * ────────────────────────────────────────────────────────────── */
 
 .dialog-overlay {
   position: fixed;
@@ -691,7 +600,6 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
 }
 
-/* Dialog entrance animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -706,11 +614,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-
-/* ──────────────────────────────────────────────────────────────
- * 10. Responsive breakpoints
- * ────────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
   .homepage__main {

@@ -1,14 +1,3 @@
-/**
- * Tests for the ConfirmDialog component.
- *
- * Covers:
- *   - Renders message
- *   - Confirm and Cancel buttons present
- *   - onConfirm fires on confirm click
- *   - onCancel fires on cancel click
- *   - Backdrop click fires onCancel
- *   - Card click does not fire onCancel
- */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ConfirmDialog } from "@/components/signer-homepage/components/ConfirmDialog";

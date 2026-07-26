@@ -1,17 +1,3 @@
-/**
- * Tests for the Signup component.
- *
- * Covers:
- *   - Renders all form fields
- *   - Validates empty fields
- *   - Validates email format
- *   - Validates password length
- *   - Validates password confirmation match
- *   - Role selection
- *   - Submits registration form
- *   - Shows error on failed registration
- *   - Back button calls onClose
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -76,7 +62,6 @@ describe("Signup", () => {
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
-    // Bypass HTML5 email validation by setting noValidate on the form
     const form = container.querySelector("form")!;
     form.setAttribute("novalidate", "");
 

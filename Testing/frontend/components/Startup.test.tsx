@@ -1,14 +1,3 @@
-/**
- * Tests for the Startup and UserTypeCard components.
- *
- * Covers:
- *   - Startup renders heading and subtitle
- *   - Startup renders both role cards
- *   - UserTypeCard renders title and description
- *   - UserTypeCard onClick fires
- *   - Startup calls onRequesterClick
- *   - Startup calls onSignerClick
- */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { Startup } from "@/components/startup/Startup";

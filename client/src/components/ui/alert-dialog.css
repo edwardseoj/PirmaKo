@@ -1,14 +1,3 @@
-/* ============================================================
- * AlertDialog Styles — Error/info popup dialog
- *
- * Matches the startup screen's dark theme with:
- *   - Semi-transparent backdrop with blur
- *   - Dark card with rounded corners
- *   - Indigo accent for the icon and button
- *   - Soft shadow and smooth transitions
- * ============================================================ */
-
-/* Backdrop — covers the whole screen with a dark overlay */
 .alert-backdrop {
   position: fixed;
   inset: 0;
@@ -21,7 +10,6 @@
   animation: fadeIn 0.2s ease-out;
 }
 
-/* The dialog card */
 .alert-card {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
@@ -34,7 +22,6 @@
   animation: slideUp 0.25s ease-out;
 }
 
-/* Warning icon — amber/orange to signal an error */
 .alert-card__icon {
   display: flex;
   align-items: center;
@@ -47,7 +34,6 @@
   margin: 0 auto 16px;
 }
 
-/* Dialog title */
 .alert-card__title {
   font-size: 18px;
   font-weight: 600;
@@ -55,7 +41,6 @@
   margin: 0 0 8px;
 }
 
-/* Error message text */
 .alert-card__message {
   font-size: 14px;
   color: var(--color-text-secondary);
@@ -63,14 +48,11 @@
   line-height: 1.5;
 }
 
-/* ── Action buttons container ─────────────────────────────── */
-/* When multiple buttons are shown (e.g., Delete + Cancel) */
 .alert-card__actions {
   display: flex;
   gap: 10px;
 }
 
-/* ── Base button style — shared across all variants ──────── */
 .alert-card__button {
   flex: 1;
   display: flex;
@@ -91,14 +73,12 @@
   transition-duration: 0.1s;
 }
 
-/* Icon inside the button (before the label) */
 .alert-card__button-icon {
   display: flex;
   align-items: center;
   line-height: 1;
 }
 
-/* ── Primary (indigo) — default OK button ────────────────── */
 .alert-card__button--primary {
   background: var(--color-accent);
   color: white;
@@ -108,7 +88,6 @@
   transform: translateY(-1px);
 }
 
-/* ── Danger (red) — delete/confirm destructive action ────── */
 .alert-card__button--danger {
   background: var(--color-status-failed);
   color: white;
@@ -122,7 +101,6 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
 }
 
-/* ── Ghost (transparent) — cancel/dismiss ────────────────── */
 .alert-card__button--ghost {
   background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
@@ -133,8 +111,6 @@
   border-color: var(--color-text-secondary);
   transform: translateY(-1px);
 }
-
-/* ── Animations ──────────────────────────────────────────────── */
 
 @keyframes fadeIn {
   from { opacity: 0; }

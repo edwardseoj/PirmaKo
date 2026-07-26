@@ -1,13 +1,3 @@
-/**
- * Tests for the backend utility functions from pdf.routes.ts.
- *
- * Since pdf.routes.ts has helper functions (generateFilename, extractTitle)
- * that are not exported, we test the same logic patterns here.
- *
- * We also test the database interactions for PDF CRUD operations
- * using an in-memory SQLite database.
- */
-
 import { describe, it, expect, beforeAll, beforeEach } from "bun:test";
 import { Database } from "bun:sqlite";
 import { createTestDb, seedPdf, seedUser } from "../helpers";
@@ -23,10 +13,8 @@ beforeEach(() => {
   testDb.exec("DELETE FROM users");
 });
 
-// ── Helper function tests (replicate logic from pdf.routes.ts) ──
-
 describe("generateFilename (logic)", () => {
-  // Replicate the generateFilename logic for testing
+
   function generateFilename(original: string): string {
     const timestamp = Date.now();
     const ext = original.split(".").pop() || "pdf";
@@ -41,7 +29,7 @@ describe("generateFilename (logic)", () => {
   it("generates unique filenames for consecutive calls", () => {
     const name1 = generateFilename("doc.pdf");
     const name2 = generateFilename("doc.pdf");
-    // Even if timestamps are the same, the random part should differ
+
     expect(name1).not.toBe(name2);
   });
 
@@ -52,13 +40,13 @@ describe("generateFilename (logic)", () => {
 
   it("uses original extension when present", () => {
     const result = generateFilename("noextension");
-    // split(".").pop() returns "noextension" when there's no dot
+
     expect(result).toEndWith(".noextension");
   });
 });
 
 describe("extractTitle (logic)", () => {
-  // Replicate the extractTitle logic for testing
+
   function extractTitle(filename: string): string {
     return filename.replace(/\.pdf$/i, "").trim() || "Untitled";
   }
@@ -76,8 +64,7 @@ describe("extractTitle (logic)", () => {
   });
 
   it("trims whitespace from clean filenames", () => {
-    // The function applies replace before trim, so trailing spaces after .pdf
-    // prevent the regex from matching — this is expected behavior
+
     expect(extractTitle("Doc.pdf")).toBe("Doc");
   });
 
@@ -85,8 +72,6 @@ describe("extractTitle (logic)", () => {
     expect(extractTitle("Document")).toBe("Document");
   });
 });
-
-// ── PDF database operations ─────────────────────────────────────
 
 describe("PDF database operations", () => {
   it("inserts a PDF record and retrieves it", () => {
@@ -134,7 +119,7 @@ describe("PDF database operations", () => {
   });
 
   it("sorts PDFs by uploaded_at descending (newest first)", () => {
-    // Insert with different timestamps
+
     const now = new Date();
     const earlier = new Date(now.getTime() - 100000);
 
