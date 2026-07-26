@@ -19,21 +19,11 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
 
 ## How to Run
 
+**Locally**
 `bun run dev`
 <br>
 
-**Live URL:** https://pirmako.up.railway.app
-
-## Deploy to Railway
-
-The project includes a multi-stage Dockerfile for full-stack deployment:
-
-1. Install the Railway CLI: `npm i -g @railway/cli`
-2. Login: `railway login`
-3. Link/create a project: `railway init`
-4. Deploy: `railway up`
-
-Or connect the GitHub repo to Railway for automatic deploys. No environment variables are required — `JWT_SECRET` and `PORT` are handled automatically.
+**Live URL:** https://pirmako-production.up.railway.app/
 
 ---
 
