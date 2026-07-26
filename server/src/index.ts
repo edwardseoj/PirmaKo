@@ -47,19 +47,22 @@ const app = new Elysia()
 // In production, serve the built client as static files with SPA fallback.
 // This catch-all is registered after all /api routes so API paths match first.
 if (isProduction && distPath) {
-  app.get("/*", async ({ path }) => {
-    // Strip query string from path
-    const urlPath = path.split("?")[0];
+  app.get("/*", async ({ request }) => {
+    try {
+      const urlPath = new URL(request.url).pathname;
 
-    // Try to serve the exact file from the dist directory
-    const filePath = join(distPath, urlPath);
-    const file = Bun.file(filePath);
-    if (await file.exists()) {
-      return file;
+      // Try to serve the exact file from the dist directory
+      const filePath = join(distPath, urlPath);
+      const file = Bun.file(filePath);
+      if (await file.exists()) {
+        return file;
+      }
+
+      // SPA fallback — serve index.html for any unmatched route
+      return Bun.file(join(distPath, "index.html"));
+    } catch {
+      return Bun.file(join(distPath, "index.html"));
     }
-
-    // SPA fallback — serve index.html for any unmatched route
-    return Bun.file(join(distPath, "index.html"));
   });
 }
 
