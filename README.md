@@ -1,6 +1,6 @@
 # PirmaKo
 
-E-Signing Application for Blocklabs' technical interview for Software Developer Intern Application
+E-Signing Application for Blocklabs' technical assessment for Software Developer Intern Application
 
 Made using Linux. Works with Unix and Windows.
 
