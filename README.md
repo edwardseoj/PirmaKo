@@ -6,7 +6,15 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
 
 1. Install bun (if not installed):
 
-   `curl -fsSL https://bun.sh/install | bash`
+   **Unix (macOS/Linux):**
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   powershell -c "irm bun.sh/install.ps1 | iex"
+   ```
 
 2. Install all dependencies:
 
