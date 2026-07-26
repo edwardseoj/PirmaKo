@@ -18,7 +18,6 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, ArrowLeft, UserPlus, FileText, PenLine } from "lucide-react";
-import { Navbar } from "../shared/Navbar";
 import { AlertDialog } from "../ui/alert-dialog";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Auth.css";
@@ -95,10 +94,11 @@ export function Signup({ onClose }: SignupProps) {
     try {
       await register(email, password, selectedRole);
       // On success, AuthContext updates user → App.tsx routes to startup
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not create account. Please try again.";
       setAlert({
         title: "Signup Failed",
-        message: err.message || "Could not create account. Please try again.",
+        message,
       });
     } finally {
       setIsSubmitting(false);

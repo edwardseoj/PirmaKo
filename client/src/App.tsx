@@ -3,37 +3,38 @@
  *
  * Manages navigation between screens:
  *   1. Login / Signup — Authentication (shown when not logged in)
- *   2. Startup        — Role selection (Requester / Signer)
- *   3. Homepage       — PDF management (Requester view)
- *   4. SignerHomepage — PDF signing (Signer view)
+ *   2. Homepage       — PDF management (Requester view)
+ *   3. SignerHomepage — PDF signing (Signer view)
  *
  * Uses simple state-based routing (no react-router dependency).
  * The AuthProvider wraps everything and manages auth state.
- * When a user logs in or signs up, they see the startup screen.
- * After selecting a role, they go to the appropriate homepage.
+ * After login/signup, the user is routed directly to their
+ * role-based homepage (requester → Homepage, signer → SignerHomepage).
+ * The Startup role-picking screen has been removed — role is
+ * chosen during sign up and stored in JWT + localStorage.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Login } from "./components/auth/Login";
 import { Signup } from "./components/auth/Signup";
-import { Startup } from "./components/startup/Startup";
 import { Homepage } from "./components/homepage/Homepage";
 import { SignerHomepage } from "./components/signer-homepage/SignerHomepage";
 import { SonnerToaster } from "./components/ui/sonner";
 
-/** Available screens in the app (after authentication). */
-type Screen = "startup" | "homepage" | "signer-homepage";
-
 /** Inner app component that uses the auth context. */
 function AppInner() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   // ── Auth screens ────────────────────────────────────────────────
   const [showSignup, setShowSignup] = useState(false);
 
-  // ── App screens (only used after login) ─────────────────────────
-  const [activeScreen, setActiveScreen] = useState<Screen>("startup");
+  // Reset to login screen when user logs out or becomes null.
+  // Without this, logging out after signing up would show the Signup popup
+  // instead of returning to the Login screen.
+  useEffect(() => {
+    if (!user) setShowSignup(false);
+  }, [user]);
 
   // Show a minimal loading state while checking for saved token
   if (loading) {
@@ -65,26 +66,18 @@ function AppInner() {
     );
   }
 
-  // ── Authenticated — show the app screens ────────────────────────
+  // ── Authenticated — route to homepage based on user role ────────
+  // Role is stored in JWT and localStorage during login/signup.
+  // Requesters see the PDF management view, signers see the PDF signing view.
+  // Back navigation from either homepage triggers logout → returns to login screen.
   return (
     <>
-      {activeScreen === "startup" && (
-        <Startup
-          onRequesterClick={() => setActiveScreen("homepage")}
-          onSignerClick={() => setActiveScreen("signer-homepage")}
-        />
+      {user.role === "requester" && (
+        <Homepage onBack={logout} />
       )}
 
-      {activeScreen === "homepage" && (
-        <Homepage
-          onBack={() => setActiveScreen("startup")}
-        />
-      )}
-
-      {activeScreen === "signer-homepage" && (
-        <SignerHomepage
-          onBack={() => setActiveScreen("startup")}
-        />
+      {user.role === "signer" && (
+        <SignerHomepage onBack={logout} />
       )}
     </>
   );

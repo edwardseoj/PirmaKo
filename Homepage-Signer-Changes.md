@@ -517,3 +517,320 @@ Full authentication flow for PirmaKo — login screen, signup popup, JWT token m
 - AlertDialog styled like Startup theme ✓
 - Responsive design ✓
 - Comments in all new files ✓
+
+---
+
+# Session 5: Authentication Fixes — HTTP Cookie, CORS, Logout
+
+## Overview
+
+Fixes to satisfy the authentication requirements:
+- User data saved in JWT, HTTP cookie, and SQLite
+- Login screen is the default screen on app restart
+- Role-based routing after login/signup
+- Back navigation from homepages to login
+
+## Changes Made
+
+### 1. HTTP Cookie for JWT Persistence
+**File:** `server/src/routes/auth.routes.ts`
+
+The JWT token is now stored in an HTTP cookie (`pirmako_auth`) in addition to being returned in the response body. This provides:
+- Persistence across browser restarts (cookie survives localStorage clearing)
+- HttpOnly flag prevents JavaScript access (XSS protection)
+- SameSite=Lax for cross-port compatibility on localhost
+- Max-Age of 7 days
+
+Changes:
+- Added `cookie: "pirmako_auth"` to the JWT plugin configuration
+- `jwt.sign()` now automatically sets a `Set-Cookie` header with the token
+- `jwt.verify()` now checks both the `Authorization: Bearer` header and the `pirmako_auth` cookie
+
+### 2. Logout Endpoint
+**File:** `server/src/routes/auth.routes.ts`
+
+Added `GET /api/auth/logout` endpoint that clears the JWT cookie by setting it with `Max-Age=0`. This ensures the cookie is properly cleared when the user logs out.
+
+### 3. CORS Configuration for Credentials
+**File:** `server/src/index.ts`
+
+Updated the CORS plugin to support cookie-based authentication:
+- Added `credentials: true` to allow cookies to be sent cross-origin
+- Added explicit `origin` list (`http://localhost:5173`, `http://127.0.0.1:5173`)
+- Required for cross-origin cookie support between Vite (5173) and Elysia (3000)
+
+### 4. Client Logout Integration
+**File:** `client/src/contexts/AuthContext.tsx`
+
+Updated the `logout()` function to:
+- Call `GET /api/auth/logout` to clear the server-side HTTP cookie
+- Clear `pirmako_token` and `pirmako_role` from localStorage
+- Reset user state to null (returns to login screen)
+
+---
+
+## Modified Files (Session 5)
+
+| File | Location | Changes |
+|------|----------|---------|
+| `auth.routes.ts` | `server/src/routes/` | Added `cookie: "pirmako_auth"` to JWT config, added GET /api/auth/logout endpoint |
+| `index.ts` | `server/src/` | Updated CORS config with credentials and explicit origin |
+| `AuthContext.tsx` | `client/src/contexts/` | logout() now calls server endpoint to clear HTTP cookie |
+
+---
+
+## Auth Flow (Updated)
+
+1. **App Start** → AuthProvider checks localStorage for saved token, and the browser sends the `pirmako_auth` cookie automatically
+2. **No Token + No Cookie** → Shows Login screen (default)
+3. **Login** → POST /api/auth/login → server returns JWT + sets `pirmako_auth` cookie → token saved to localStorage → user state set → routes to role-based homepage
+4. **Signup** → POST /api/auth/register → server returns JWT + sets `pirmako_auth` cookie with role → token saved to localStorage → user state set → routes to role-based homepage
+5. **Authenticated** → Role determines homepage: requester → Homepage, signer → SignerHomepage
+6. **Back Navigation** → Navbar back button calls logout() → clears cookie + localStorage → returns to Login screen
+
+---
+
+## How User Data Is Stored
+
+| Storage | What's Stored | Purpose |
+|---------|---------------|---------|
+| **JWT (token)** | id, email, role (signed) | Stateless authentication — server verifies without DB lookup |
+| **HTTP Cookie** (`pirmako_auth`) | JWT token value | Persistence across browser restarts, HttpOnly for XSS protection |
+| **SQLite** (`users` table) | id, email, password hash, role, created_at | Persistent user records, role authority |
+| **localStorage** (`pirmako_token`) | JWT token value | Client-side session restoration on page reload |
+| **localStorage** (`pirmako_role`) | "requester" or "signer" | Fast role check for routing (avoids waiting for /me response) |
+
+---
+
+# Session 6: Authentication Fixes — Signup Flow & Requester Email
+
+## Overview
+
+Fixes to the authentication flow and PDF management:
+- Fixed signup flow to return to login screen after logout
+- Added requester email to PDF uploads for signer visibility
+- Signers can now see who uploaded each PDF
+
+## Changes Made
+
+### 1. Signup Flow Fix
+**File:** `client/src/App.tsx`
+
+**Problem:** After signing up and logging out, the app showed the Signup popup instead of the Login screen because `showSignup` state remained `true`.
+
+**Fix:** Added `useEffect` to reset `showSignup` to `false` whenever `user` becomes `null` (on logout or session expiry).
+
+### 2. Requester Email in Database Schema
+**File:** `server/src/db/database.ts`
+
+- Added `requester_email TEXT` column to the `pdfs` table
+- Added migration to add the column to existing databases
+- The email links each PDF to the requester who uploaded it
+
+### 3. PDF Upload with Requester Email
+**File:** `server/src/routes/pdf.routes.ts`
+
+- Updated `POST /api/pdfs` to accept `requester_email` in form data
+- Stores the email in the database with the PDF record
+- Returns `requester_email` in the response
+
+### 4. Frontend Hooks Updated
+**File:** `client/src/hooks/usePdfFiles.ts`
+
+- Added `requester_email` to `PdfRecord` interface
+- Updated `upload()` to accept optional `requesterEmail` parameter
+- Sends the email in the form data when uploading
+
+**File:** `client/src/hooks/useSignerPdfs.ts`
+
+- Added `requester_email` to `SignerPdfRecord` interface
+
+### 5. Homepage Requester Email
+**File:** `client/src/components/homepage/Homepage.tsx`
+
+- Added `useAuth` import to get the current user's email
+- Passes `user?.email` when uploading PDFs to link them to the requester
+
+### 6. Signer Homepage Display
+**File:** `client/src/components/signer-homepage/SignerHomepage.tsx`
+
+- Updated `SignerPdfRow` to display requester email below the date
+- Updated `PdfViewerPopup` to show requester email in the details panel
+- Added `signer-pdf-row__requester` CSS class for styling
+
+**File:** `client/src/components/signer-homepage/SignerHomepage.css`
+
+- Added `.signer-pdf-row__requester` styles (accent color, smaller font)
+- Added `.signer-viewer-popup__requester` styles for viewer popup
+
+---
+
+## Modified Files (Session 6)
+
+| File | Location | Changes |
+|------|----------|---------|
+| `App.tsx` | `client/src/` | Added useEffect to reset showSignup on logout |
+| `database.ts` | `server/src/db/` | Added requester_email column to pdfs table |
+| `pdf.routes.ts` | `server/src/routes/` | Updated POST /api/pdfs to accept and store requester_email |
+| `usePdfFiles.ts` | `client/src/hooks/` | Added requester_email to interface, updated upload() |
+| `useSignerPdfs.ts` | `client/src/hooks/` | Added requester_email to interface |
+| `Homepage.tsx` | `client/src/components/homepage/` | Added useAuth, pass user.email when uploading |
+| `SignerHomepage.tsx` | `client/src/components/signer-homepage/` | Display requester email in list and viewer |
+| `SignerHomepage.css` | `client/src/components/signer-homepage/` | Added requester email styles |
+
+---
+
+## Database Changes
+
+| Table | Column | Type | Description |
+|-------|--------|------|-------------|
+| pdfs | requester_email | TEXT | Email of the requester who uploaded the PDF |
+
+---
+
+## Auth Flow (Updated)
+
+1. **App Start** → AuthProvider checks localStorage for saved token
+2. **No Token** → Shows Login screen (default)
+3. **Login** → POST /api/auth/login → token saved → routes to role-based homepage
+4. **Signup** → POST /api/auth/register → token saved → routes to role-based homepage
+5. **Logout** → Clears token + cookie → **returns to Login screen** (not Signup popup)
+6. **Upload PDF** → Requester's email is saved with the PDF record
+7. **Signer Views PDFs** → Sees all pending PDFs with requester email displayed
+
+---
+
+# Session 7: Authentication Fixes — PDF Isolation, Button Styling, Alert Dialogs
+
+## Overview
+
+Fixes to satisfy the Authentication.md requirements:
+- PDF uploads isolated per requester (each requester only sees their own PDFs)
+- PDF viewer sign/cancel buttons expanded to same width, column layout
+- PDF editor alert dialogs inherit startup style
+- PDF editor sign/cancel buttons same width, margin between preview and sign
+- PDF list delete alert dialog after download, inherits startup style
+
+## Changes Made
+
+### 1. PDF Upload Isolation — Requesters Only See Their Own PDFs
+**File:** `server/src/routes/pdf.routes.ts`
+
+**Problem:** The `GET /api/pdfs` endpoint returned ALL PDFs to every user, meaning Requester 1 could see Requester 2's uploads.
+
+**Fix:**
+- Added `requester_email` query parameter to `GET /api/pdfs`
+- When `requester_email` is provided and `all` is not "true", the endpoint filters results by `WHERE requester_email = ?`
+- Signers use `all=true` or omit the parameter to see all PDFs
+- Requesters pass their email to see only their own uploads
+
+**File:** `client/src/hooks/usePdfFiles.ts`
+
+**Changes:**
+- Added optional `requesterEmail` parameter to `usePdfFiles()` hook
+- When provided, sends `requester_email` query parameter in the API request
+- Backend filters results so requesters only see their own uploaded PDFs
+
+**File:** `client/src/components/homepage/Homepage.tsx`
+
+**Changes:**
+- Passes `user?.email` to `usePdfFiles()` hook
+- Ensures each requester only sees their own uploaded PDFs
+
+### 2. PDF Viewer Button Width Fix
+**File:** `client/src/components/signer-homepage/SignerHomepage.css`
+
+**Problem:** Sign and cancel buttons in the PDF viewer popup were too small in width.
+
+**Fix:**
+- Added `.signer-viewer-popup__actions .signer-action-btn.signer-action-btn--with-label` rule
+- Forces buttons with labels to be full-width (`width: 100%`) in the viewer popup
+- Both buttons now have the same width and are centered
+- Layout remains column (vertical) with proper spacing
+
+### 3. PDF Editor Alert Dialog Startup Inheritance
+**File:** `client/src/components/signer-homepage/SignerHomepage.tsx`
+
+**Problem:** The PDF editor used `window.alert()` for validation errors, which doesn't match the startup theme.
+
+**Fix:**
+- Added `AlertDialog` import from `../ui/alert-dialog`
+- Added `alert` state to `PdfEditorPopup` component
+- Replaced all `window.alert()` calls with styled `AlertDialog` component:
+  - "Signature Required" alert when previewing without signature
+  - "Preview Failed" alert when preview generation fails
+  - "Signature Required" alert when confirming without signature
+- AlertDialog inherits the startup dark theme styling
+
+**File:** `client/src/components/signer-homepage/components/ConfirmDialog.tsx`
+
+**Problem:** The inline ConfirmDialog didn't inherit startup styling.
+
+**Fix:**
+- Complete rewrite to use `alert-backdrop` and `alert-card` CSS classes
+- Now displays as a proper modal dialog with:
+  - Semi-transparent backdrop with blur
+  - Dark card with rounded corners
+  - Warning icon (AlertTriangle)
+  - Title and message text
+  - Confirm (Sign) and Cancel buttons
+- Styled identically to the AlertDialog component
+
+### 4. PDF Editor Button Width & Margin Fix
+**File:** `client/src/components/signer-homepage/SignerHomepage.css`
+
+**Problem:** Sign button not same width as cancel button in editor sidebar. No margin between preview and sign buttons.
+
+**Fix:**
+- Added `.signer-editor-popup__sidebar-actions .signer-action-btn.signer-action-btn--with-label` rule
+- Forces buttons with labels to be full-width in the editor sidebar
+- Added `.signer-editor-popup__sidebar-actions .signer-action-btn--indigo` rule
+- Adds `margin-bottom: 4px` to the preview button (indigo) for spacing before sign/cancel buttons
+
+### 5. PDF List Delete Alert After Download
+**File:** `client/src/components/homepage/Homepage.tsx`
+
+**Problem:** No alert dialog prompting delete PDF after downloading.
+
+**Fix:**
+- Added `AlertDialog` import from `../ui/alert-dialog`
+- Added `downloadDeleteTarget` state to track PDFs pending post-download deletion
+- Modified `handleDownload` to show AlertDialog after successful download
+- AlertDialog asks: "Do you want to delete [PDF name] after downloading?"
+- Confirming deletes the PDF, dismissing keeps it
+- Alert inherits startup theme styling
+
+**File:** `client/src/components/homepage/Homepage.tsx` (DeleteConfirmDialog)
+
+**Problem:** DeleteConfirmDialog didn't inherit startup styling.
+
+**Fix:**
+- Updated to use `alert-backdrop` and `alert-card` CSS classes
+- Now styled identically to the AlertDialog component
+- Uses same animations (fadeIn, slideUp) and visual design
+
+---
+
+## Modified Files (Session 7)
+
+| File | Location | Changes |
+|------|----------|---------|
+| `pdf.routes.ts` | `server/src/routes/` | Added `requester_email` query param to GET /api/pdfs for filtering |
+| `usePdfFiles.ts` | `client/src/hooks/` | Added `requesterEmail` parameter, sends query param in API request |
+| `Homepage.tsx` | `client/src/components/homepage/` | Passes user.email to usePdfFiles, added download-then-delete AlertDialog, updated DeleteConfirmDialog styling |
+| `SignerHomepage.tsx` | `client/src/components/signer-homepage/` | Added AlertDialog import, replaced window.alert() with styled dialogs |
+| `SignerHomepage.css` | `client/src/components/signer-homepage/` | Full-width buttons in viewer and editor, margin between preview and sign |
+| `ConfirmDialog.tsx` | `client/src/components/signer-homepage/components/` | Complete rewrite to inherit startup AlertDialog styling |
+
+---
+
+## Design Compliance
+
+- Dark mode only (matches Startup.css variables) ✓
+- Indigo accent (#6366f1) ✓
+- Rounded cards, soft shadows, smooth transitions ✓
+- AlertDialog inherits startup style ✓
+- PDF isolation per requester ✓
+- Button widths consistent (same width for sign/cancel) ✓
+- Responsive design ✓
+- Comments in modified files ✓

@@ -388,6 +388,13 @@
   color: var(--color-text-secondary);
 }
 
+/* Requester email — shows who uploaded the PDF */
+.signer-pdf-row__requester {
+  font-size: 12px;
+  color: var(--color-accent);
+  margin-top: 2px;
+}
+
 /* Right side — status badge + e-sign button */
 .signer-pdf-row__actions {
   display: flex;
@@ -582,6 +589,11 @@
   color: var(--color-text-primary);
 }
 
+/* Requester email in viewer popup details */
+.signer-viewer-popup__requester {
+  color: var(--color-accent);
+}
+
 /* Action buttons — centered at the bottom of the details panel,
    stacked vertically so Sign and Cancel appear one above the other */
 .signer-viewer-popup__actions {
@@ -742,11 +754,22 @@
   justify-content: center;
 }
 
+/* Force buttons with labels to also be full-width in the editor sidebar */
+.signer-editor-popup__sidebar-actions .signer-action-btn.signer-action-btn--with-label {
+  width: 100%;
+  justify-content: center;
+}
+
 /* Confirmation dialog in sidebar — full width */
 .signer-editor-popup__sidebar-actions .signer-confirm {
   flex-direction: column;
   width: 100%;
   gap: 12px;
+}
+
+/* Margin between preview button and sign/cancel buttons in the editor sidebar */
+.signer-editor-popup__sidebar-actions .signer-action-btn--indigo {
+  margin-bottom: 4px;
 }
 
 
@@ -767,10 +790,17 @@
 .signer-viewer-popup__actions .signer-action-buttons {
   flex-direction: column;
   width: 100%;
+  gap: 10px;
 }
 
 /* Inside the viewer popup, make ALL buttons full width and centered */
 .signer-viewer-popup__actions .signer-action-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Force buttons with labels to also be full-width in the viewer popup */
+.signer-viewer-popup__actions .signer-action-btn.signer-action-btn--with-label {
   width: 100%;
   justify-content: center;
 }

@@ -112,3 +112,39 @@ App.tsx (screen router)
 - Vite dev server proxies `/api` requests to the backend at `http://localhost:3000`.
 - Styling matches `Startup.css` — same CSS variables, transitions, shadows, border radii, and dark-mode palette.
 - TypeScript compiles clean (`tsc --noEmit` passes). ESLint passes with no errors.
+
+---
+
+# Session 5: Authentication Fixes — HTTP Cookie, CORS, Logout
+
+## Changes Made
+
+### 1. HTTP Cookie for JWT Persistence
+**File:** `server/src/routes/auth.routes.ts`
+
+JWT token now stored in HTTP cookie (`pirmako_auth`) alongside response body. Provides persistence across browser restarts, HttpOnly for XSS protection, SameSite=Lax, 7-day expiry.
+
+### 2. Logout Endpoint
+**File:** `server/src/routes/auth.routes.ts`
+
+Added `GET /api/auth/logout` that clears the JWT cookie via `Max-Age=0`.
+
+### 3. CORS Configuration
+**File:** `server/src/index.ts`
+
+Added `credentials: true` and explicit origin list to allow cross-origin cookie support between Vite (5173) and Elysia (3000).
+
+### 4. Client Logout Integration
+**File:** `client/src/contexts/AuthContext.tsx`
+
+`logout()` now calls `GET /api/auth/logout` to clear the server-side HTTP cookie before clearing localStorage and user state.
+
+---
+
+## Modified Files (Session 5)
+
+| File | Location | Changes |
+|------|----------|---------|
+| `auth.routes.ts` | `server/src/routes/` | Added cookie config to JWT, added logout endpoint |
+| `index.ts` | `server/src/` | Updated CORS with credentials and explicit origin |
+| `AuthContext.tsx` | `client/src/contexts/` | logout() calls server endpoint to clear cookie |

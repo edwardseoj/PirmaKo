@@ -23,6 +23,8 @@ export interface SignerPdfRecord {
   status: "Pending" | "Signed";
   /** ISO-861 timestamp — when it was pushed for signing. */
   uploaded_at: string;
+  /** Email of the requester who uploaded this PDF. */
+  requester_email: string | null;
 }
 
 /** Available sort options. */

@@ -22,6 +22,10 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     jwt({
       name: "jwt",
       secret: JWT_SECRET,
+      // Store JWT in an HTTP cookie for persistence across browser restarts.
+      // The cookie is HttpOnly (not accessible via JavaScript) and SameSite=Lax.
+      // Max-Age: 7 days (604800 seconds).
+      cookie: "pirmako_auth",
     })
   )
 
@@ -131,4 +135,18 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     }
 
     return { user };
+  })
+
+  // ── LOGOUT ─────────────────────────────────────────────────────
+  // Clears the JWT cookie so the user is no longer authenticated.
+  // The client also clears localStorage on its side.
+  .get("/logout", () => {
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        // Clear the cookie by setting it to empty with Max-Age=0
+        "Set-Cookie": "pirmako_auth=; Path=/; Max-Age=0; SameSite=Lax",
+      },
+    });
   });

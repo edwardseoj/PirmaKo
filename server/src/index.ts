@@ -13,7 +13,11 @@ import { pdfRoutes } from "./routes/pdf.routes";
 const app = new Elysia()
   // Enable Cross-Origin Resource Sharing so the Vite dev server (port 5173)
   // can talk to this API server (port 3000) without being blocked.
-  .use(cors())
+  // credentials: true allows cookies to be sent cross-origin.
+  .use(cors({
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    credentials: true,
+  }))
 
   // Mount authentication routes (register, login, me)
   .use(authRoutes)

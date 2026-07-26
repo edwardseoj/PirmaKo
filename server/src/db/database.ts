@@ -40,20 +40,22 @@ db.exec(`
 
 // ── PDFs table ─────────────────────────────────────────────────
 // Stores uploaded PDF metadata, linked to the user who uploaded it.
-// - id:         unique row identifier (auto-increment)
-// - title:      user-visible name of the PDF (filename without extension)
-// - filename:   actual file saved on disk inside /uploads
-// - status:     "Pending" | "Signed" | "Failed"
-// - uploaded_at: ISO-8601 timestamp of when the file was uploaded
-// - user_id:    foreign key → users.id (who uploaded this PDF)
+// - id:              unique row identifier (auto-increment)
+// - title:           user-visible name of the PDF (filename without extension)
+// - filename:        actual file saved on disk inside /uploads
+// - status:          "Pending" | "Signed" | "Failed"
+// - uploaded_at:     ISO-8601 timestamp of when the file was uploaded
+// - user_id:         foreign key → users.id (who uploaded this PDF)
+// - requester_email: email of the requester who uploaded the PDF (for signer visibility)
 db.exec(`
   CREATE TABLE IF NOT EXISTS pdfs (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    title      TEXT    NOT NULL,
-    filename   TEXT    NOT NULL,
-    status     TEXT    NOT NULL DEFAULT 'Pending',
-    uploaded_at TEXT   NOT NULL,
-    user_id    INTEGER REFERENCES users(id)
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    title           TEXT    NOT NULL,
+    filename        TEXT    NOT NULL,
+    status          TEXT    NOT NULL DEFAULT 'Pending',
+    uploaded_at     TEXT    NOT NULL,
+    user_id         INTEGER REFERENCES users(id),
+    requester_email TEXT
   );
 `);
 
@@ -62,6 +64,14 @@ db.exec(`
 // SQLite doesn't support ADD COLUMN IF NOT EXISTS, so we catch the error.
 try {
   db.exec(`ALTER TABLE pdfs ADD COLUMN user_id INTEGER REFERENCES users(id)`);
+} catch {
+  // Column already exists — safe to ignore.
+}
+
+// ── Migration: add requester_email to existing pdfs ────────────
+// Links each PDF to the requester's email so signers can see who uploaded it.
+try {
+  db.exec(`ALTER TABLE pdfs ADD COLUMN requester_email TEXT`);
 } catch {
   // Column already exists — safe to ignore.
 }

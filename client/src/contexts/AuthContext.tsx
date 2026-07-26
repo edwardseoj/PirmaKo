@@ -33,7 +33,10 @@ interface AuthContextType {
 // Create the context with undefined as default (will be provided by the Provider)
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Exporting both a component (AuthProvider) and a hook (useAuth) is a standard
+// React context pattern. The fast-refresh lint rule is a false positive here.
 /** Hook to access the auth context from any component. */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
@@ -48,34 +51,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // ── On mount: check if user has a saved token ──────────────────
+  // Reads token from localStorage and verifies it with the backend.
+  // This ensures the user is routed to their correct homepage without
+  // needing the startup role-picking screen.
   useEffect(() => {
     const token = localStorage.getItem("pirmako_token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
 
-    // Verify the token with the backend and load user data
-    fetch("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    const verifyToken = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
         if (data.user) {
           setUser(data.user);
+          localStorage.setItem("pirmako_role", data.user.role);
         } else {
           localStorage.removeItem("pirmako_token");
+          localStorage.removeItem("pirmako_role");
         }
-      })
-      .catch(() => {
+      } catch {
         localStorage.removeItem("pirmako_token");
-      })
-      .finally(() => {
+        localStorage.removeItem("pirmako_role");
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    verifyToken();
   }, []);
 
   // ── Login ──────────────────────────────────────────────────────
+  // Stores token and role in localStorage so the user stays logged in
+  // across app restarts. Role is used to route to the correct homepage.
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch("/api/auth/login", {
       method: "POST",
@@ -87,13 +100,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // If the backend returned an error message, throw it so the UI can show it
     if (data.error) throw new Error(data.error);
 
-    // Save token and user — the app is now authenticated
+    // Save token, role, and user — the app is now authenticated
     localStorage.setItem("pirmako_token", data.token);
+    localStorage.setItem("pirmako_role", data.user.role);
     setUser(data.user);
     return data.token;
   }, []);
 
   // ── Register ───────────────────────────────────────────────────
+  // Creates a new account with the selected role.
+  // Role is stored in JWT (server), localStorage (client), and SQLite (database).
   const register = useCallback(async (email: string, password: string, role: string) => {
     const res = await fetch("/api/auth/register", {
       method: "POST",
@@ -104,14 +120,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data.error) throw new Error(data.error);
 
+    // Save token, role, and user after successful registration
     localStorage.setItem("pirmako_token", data.token);
+    localStorage.setItem("pirmako_role", data.user.role);
     setUser(data.user);
     return data.token;
   }, []);
 
   // ── Logout ─────────────────────────────────────────────────────
-  const logout = useCallback(() => {
+  // Clears all stored auth data and resets user state.
+  // Also calls the server logout endpoint to clear the HTTP cookie.
+  // Returns the app to the login screen.
+  const logout = useCallback(async () => {
+    // Tell the server to clear the JWT cookie
+    try {
+      await fetch("/api/auth/logout", { method: "GET" });
+    } catch {
+      // Ignore errors — cookie may already be expired
+    }
+    // Clear client-side storage and state
     localStorage.removeItem("pirmako_token");
+    localStorage.removeItem("pirmako_role");
     setUser(null);
   }, []);
 

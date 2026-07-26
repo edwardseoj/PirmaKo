@@ -24,12 +24,22 @@ export interface PdfRecord {
   filename: string;
   status: "Pending" | "Signed" | "Failed";
   uploaded_at: string; // ISO-8601 timestamp
+  requester_email: string | null; // Email of the requester who uploaded this PDF
 }
 
 /** Available sort options. */
 export type SortOption = "newest" | "oldest" | "alpha";
 
-export function usePdfFiles() {
+/**
+ * Custom hook for managing PDF files via the API.
+ *
+ * Accepts an optional requesterEmail parameter. When provided,
+ * only PDFs uploaded by that email are returned. This ensures
+ * each requester only sees their own uploads.
+ *
+ * @param requesterEmail - Optional email to filter PDFs by. When omitted, returns all PDFs.
+ */
+export function usePdfFiles(requesterEmail?: string) {
   const [pdfs, setPdfs] = useState<PdfRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortOption>("newest");
@@ -39,13 +49,20 @@ export function usePdfFiles() {
   // The actual fetch logic. Called by the effect below.
   // Uses fetchKey to trigger re-fetches without putting setState
   // directly inside useEffect.
+  // When requesterEmail is provided, the backend filters results
+  // so requesters only see their own uploaded PDFs.
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoading(true);
       try {
-        const res = await apiFetch(`/api/pdfs?sort=${sort}`);
+        // Build query params — include requester_email if provided
+        const params = new URLSearchParams({ sort });
+        if (requesterEmail) {
+          params.set("requester_email", requesterEmail);
+        }
+        const res = await apiFetch(`/api/pdfs?${params.toString()}`);
         const data = await res.json();
         if (!cancelled) setPdfs(data.pdfs ?? []);
       } catch (err) {
@@ -57,14 +74,18 @@ export function usePdfFiles() {
 
     load();
     return () => { cancelled = true; };
-  }, [sort, fetchKey]); // Re-runs when sort or fetchKey changes
+  }, [sort, fetchKey, requesterEmail]); // Re-runs when sort, fetchKey, or requesterEmail changes
 
   // ── Upload a PDF ──────────────────────────────────────────────
-  // Accepts a File object, sends it to the API, then triggers a re-fetch.
+  // Accepts a File object and the requester's email, sends it to the API,
+  // then triggers a re-fetch. The email links the PDF to the uploader.
   const upload = useCallback(
-    async (file: File) => {
+    async (file: File, requesterEmail?: string) => {
       const formData = new FormData();
       formData.append("file", file);
+      if (requesterEmail) {
+        formData.append("requester_email", requesterEmail);
+      }
 
       const res = await apiFetch("/api/pdfs", {
         method: "POST",

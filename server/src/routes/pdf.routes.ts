@@ -35,8 +35,12 @@ export const pdfRoutes = new Elysia({ prefix: "/api/pdfs" })
   // ── LIST all PDFs ─────────────────────────────────────────────
   // Query params:
   //   sort = "newest" (default) | "oldest" | "alpha"
+  //   requester_email = filter PDFs by uploader's email (used by requesters to see only their own)
+  //   all = "true" to return all PDFs (used by signers who see everyone's uploads)
   .get("/", ({ query }) => {
     const sort = (query as Record<string, string>).sort || "newest";
+    const requesterEmail = (query as Record<string, string>).requester_email;
+    const showAll = (query as Record<string, string>).all === "true";
 
     let orderBy: string;
     switch (sort) {
@@ -50,18 +54,29 @@ export const pdfRoutes = new Elysia({ prefix: "/api/pdfs" })
         orderBy = "uploaded_at DESC";
     }
 
+    // If requester_email is provided and not showing all, filter by uploader.
+    // This ensures each requester only sees their own uploaded PDFs.
+    let stmt;
+    if (requesterEmail && !showAll) {
+      stmt = db.prepare(`SELECT * FROM pdfs WHERE requester_email = ? ORDER BY ${orderBy}`);
+      const pdfs = stmt.all(requesterEmail);
+      return { pdfs };
+    }
+
     // Fetch all rows from the pdfs table, ordered by the chosen sort.
-    const stmt = db.prepare(`SELECT * FROM pdfs ORDER BY ${orderBy}`);
+    stmt = db.prepare(`SELECT * FROM pdfs ORDER BY ${orderBy}`);
     const pdfs = stmt.all();
     return { pdfs };
   })
 
   // ── UPLOAD a new PDF ──────────────────────────────────────────
-  // Expects multipart/form-data with a "file" field.
+  // Expects multipart/form-data with a "file" field and optional "requester_email".
   .post("/", async ({ body }) => {
     // Cast body to access the file field.
     const formData = body as Record<string, any>;
     const file = formData.file as File | undefined;
+    // Requester email is sent from the frontend to link the PDF to the uploader
+    const requesterEmail = formData.requester_email as string | undefined;
 
     if (!file) {
       return { error: "No file provided" };
@@ -80,9 +95,9 @@ export const pdfRoutes = new Elysia({ prefix: "/api/pdfs" })
     const status = "Pending"; // All new uploads start as Pending
 
     const stmt = db.prepare(
-      `INSERT INTO pdfs (title, filename, status, uploaded_at) VALUES (?, ?, ?, ?)`
+      `INSERT INTO pdfs (title, filename, status, uploaded_at, requester_email) VALUES (?, ?, ?, ?, ?)`
     );
-    const result = stmt.run(title, uniqueName, status, uploadedAt);
+    const result = stmt.run(title, uniqueName, status, uploadedAt, requesterEmail || null);
 
     // Return the newly created PDF record.
     return {
@@ -91,6 +106,7 @@ export const pdfRoutes = new Elysia({ prefix: "/api/pdfs" })
       filename: uniqueName,
       status,
       uploaded_at: uploadedAt,
+      requester_email: requesterEmail || null,
     };
   })
 

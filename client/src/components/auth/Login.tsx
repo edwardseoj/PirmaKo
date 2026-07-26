@@ -35,7 +35,9 @@ export function Login({ onSignupClick }: LoginProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ── Alert dialog state ──────────────────────────────────────────
-  const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
+  const [alert, setAlert] = useState<{ title: string; message: string } | null>(
+    null,
+  );
 
   // ── Handle login form submission ────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,10 +65,11 @@ export function Login({ onSignupClick }: LoginProps) {
     try {
       await login(email, password);
       // On success, AuthContext updates user state → App.tsx switches to startup
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Invalid email or password. Please try again.";
       setAlert({
         title: "Login Failed",
-        message: err.message || "Invalid email or password. Please try again.",
+        message,
       });
       // Clear fields on error per UX requirements
       setEmail("");
@@ -135,7 +138,7 @@ export function Login({ onSignupClick }: LoginProps) {
             disabled={isSubmitting}
           >
             <LogIn size={18} />
-            {isSubmitting ? "Signing in..." : "Sign In"}
+            {isSubmitting ? "Logging in..." : "Log In"}
           </button>
 
           {/* Sign up link — small text below the button */}

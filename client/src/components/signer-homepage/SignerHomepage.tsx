@@ -35,6 +35,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { Navbar } from "../shared/Navbar";
+import { AlertDialog } from "../ui/alert-dialog";
 import {
   useSignerPdfs,
   type SignerPdfRecord,
@@ -229,6 +230,12 @@ function SignerPdfRow({
           <span className="signer-pdf-row__meta">
             Pushed {formattedDate} at {formattedTime}
           </span>
+          {/* Show requester email if available */}
+          {pdf.requester_email && (
+            <span className="signer-pdf-row__requester">
+              From: {pdf.requester_email}
+            </span>
+          )}
         </div>
       </div>
 
@@ -397,6 +404,16 @@ function PdfViewerPopup({
             </span>
           </div>
 
+          {/* Show requester email if available */}
+          {pdf.requester_email && (
+            <div className="signer-viewer-popup__info">
+              <span className="signer-viewer-popup__label">Requested by</span>
+              <span className="signer-viewer-popup__value signer-viewer-popup__requester">
+                {pdf.requester_email}
+              </span>
+            </div>
+          )}
+
           {/* Action buttons — Sign (green) and Cancel (red), centered */}
           <div className="signer-viewer-popup__actions">
             <ActionButtons>
@@ -492,6 +509,9 @@ function PdfEditorPopup({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
+  // Alert dialog state — replaces window.alert() with styled dialog
+  const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
+
   // ── Upload e-signature button handler ────────────────────────
   // Opens the native file picker for image files (PNG, JPEG).
   const handleUploadClick = () => {
@@ -536,7 +556,10 @@ function PdfEditorPopup({
   // with the signature embedded. Does NOT save to disk or update SQLite.
   const handlePreview = async () => {
     if (!signatureFile || !renderInfo) {
-      window.alert("Please upload an e-signature image first.");
+      setAlert({
+        title: "Signature Required",
+        message: "Please upload an e-signature image first.",
+      });
       return;
     }
 
@@ -563,7 +586,10 @@ function PdfEditorPopup({
       setPreviewUrl(url);
     } catch (err) {
       console.error("Preview generation failed:", err);
-      window.alert("Failed to generate preview. Please try again.");
+      setAlert({
+        title: "Preview Failed",
+        message: "Failed to generate preview. Please try again.",
+      });
     } finally {
       setPreviewLoading(false);
     }
@@ -590,7 +616,10 @@ function PdfEditorPopup({
   // Check button handler — shows alert if no signature uploaded, otherwise opens confirmation
   const handleCheckClick = () => {
     if (!signatureFile) {
-      window.alert("Please upload an e-signature image before confirming.");
+      setAlert({
+        title: "Signature Required",
+        message: "Please upload an e-signature image before confirming.",
+      });
       return;
     }
     setShowConfirm(true);
@@ -731,6 +760,15 @@ function PdfEditorPopup({
             />
           </div>
         </div>
+      )}
+
+      {/* Styled alert dialog — replaces window.alert() with startup-themed popup */}
+      {alert && (
+        <AlertDialog
+          title={alert.title}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
       )}
     </PopupOverlay>
   );

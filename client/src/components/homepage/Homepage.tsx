@@ -34,7 +34,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Navbar } from "../shared/Navbar";
+import { AlertDialog } from "../ui/alert-dialog";
 import { usePdfFiles, type SortOption, type PdfRecord } from "../../hooks/usePdfFiles";
+import { useAuth } from "../../contexts/AuthContext";
 import "./Homepage.css";
 
 /* ──────────────────────────────────────────────────────────────
@@ -47,6 +49,9 @@ interface HomepageProps {
 }
 
 export function Homepage({ onBack }: HomepageProps) {
+  const { user } = useAuth();
+  // Pass the requester's email so they only see their own uploaded PDFs.
+  // This ensures Requester 1 cannot see Requester 2's uploads (and vice versa).
   const {
     pdfs,
     loading,
@@ -55,10 +60,14 @@ export function Homepage({ onBack }: HomepageProps) {
     upload,
     remove,
     download,
-  } = usePdfFiles();
+  } = usePdfFiles(user?.email);
 
   // Track which PDF is pending deletion (for the confirmation dialog).
   const [deleteTarget, setDeleteTarget] = useState<PdfRecord | null>(null);
+
+  // Track which PDF was just downloaded (for the post-download delete prompt).
+  // After a successful download, an AlertDialog asks if the user wants to delete the PDF.
+  const [downloadDeleteTarget, setDownloadDeleteTarget] = useState<PdfRecord | null>(null);
 
   // Hidden file input ref — triggered by the floating upload button.
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +83,8 @@ export function Homepage({ onBack }: HomepageProps) {
     if (!file) return;
 
     try {
-      await upload(file);
+      // Pass the requester's email to link the PDF to their account
+      await upload(file, user?.email);
       toast.success("PDF uploaded", {
         description: `"${file.name}" is now pending signing.`,
       });
@@ -107,17 +117,41 @@ export function Homepage({ onBack }: HomepageProps) {
   };
 
   // ── Download handler ────────────────────────────────────────
+  // After a successful download, shows an AlertDialog prompting
+  // the user to delete the PDF. This matches the requirement:
+  // "Alert dialog delete PDF prompt after download."
   const handleDownload = async (pdf: PdfRecord) => {
     try {
       await download(pdf.id, pdf.title);
       toast.success("Download started", {
         description: `"${pdf.title}.pdf" is downloading.`,
       });
+      // Show delete prompt after successful download
+      setDownloadDeleteTarget(pdf);
     } catch {
       toast.error("Download failed", {
         description: "Could not download the PDF file.",
       });
     }
+  };
+
+  // ── Delete after download handler ─────────────────────────
+  // Deletes the PDF that was just downloaded.
+  const handleDownloadDeleteConfirm = async () => {
+    if (!downloadDeleteTarget) return;
+
+    try {
+      await remove(downloadDeleteTarget.id);
+      toast.success("PDF deleted", {
+        description: `"${downloadDeleteTarget.title}" has been removed.`,
+      });
+    } catch {
+      toast.error("Delete failed", {
+        description: "Something went wrong while deleting the PDF.",
+      });
+    }
+
+    setDownloadDeleteTarget(null);
   };
 
   // ── Render ──────────────────────────────────────────────────
@@ -171,6 +205,15 @@ export function Homepage({ onBack }: HomepageProps) {
           title={deleteTarget.title}
           onConfirm={handleDeleteConfirm}
           onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {/* Post-download delete prompt — styled AlertDialog inheriting startup theme */}
+      {downloadDeleteTarget && (
+        <AlertDialog
+          title="Delete PDF"
+          message={`Do you want to delete "${downloadDeleteTarget.title}" after downloading? This action cannot be undone.`}
+          onClose={handleDownloadDeleteConfirm}
         />
       )}
     </div>
@@ -446,6 +489,7 @@ function LoadingSkeleton() {
 
 /* ──────────────────────────────────────────────────────────────
  * DeleteConfirmDialog — modal overlay for confirming deletion
+ * Uses alert-backdrop/alert-card classes to inherit startup styling.
  * ────────────────────────────────────────────────────────────── */
 
 function DeleteConfirmDialog({
@@ -458,26 +502,31 @@ function DeleteConfirmDialog({
   onCancel: () => void;
 }) {
   return (
-    <div className="dialog-overlay" onClick={onCancel}>
-      <div className="dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="dialog__icon">
+    <div className="alert-backdrop" onClick={onCancel}>
+      <div className="alert-card" onClick={(e) => e.stopPropagation()}>
+        <div className="alert-card__icon">
           <AlertCircle size={24} strokeWidth={1.5} />
         </div>
-        <h2 className="dialog__title">Delete PDF</h2>
-        <p className="dialog__message">
+        <h2 className="alert-card__title">Delete PDF</h2>
+        <p className="alert-card__message">
           Are you sure you want to delete <strong>"{title}"</strong>? This
           action cannot be undone.
         </p>
-        <div className="dialog__actions">
+        <div style={{ display: "flex", gap: "10px" }}>
           <button
-            className="dialog__btn dialog__btn--cancel"
+            className="alert-card__button"
             onClick={onCancel}
             type="button"
+            style={{
+              background: "var(--color-bg-tertiary)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-secondary)",
+            }}
           >
             Cancel
           </button>
           <button
-            className="dialog__btn dialog__btn--confirm"
+            className="alert-card__button"
             onClick={onConfirm}
             type="button"
           >
