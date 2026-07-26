@@ -1,0 +1,36 @@
+{
+  "name": "pirmako-testing",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "bun run test:frontend && bun run test:backend",
+    "test:frontend": "vitest run",
+    "test:frontend:watch": "vitest",
+    "test:backend": "bun test backend/",
+    "test:all": "bun run test"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/bun": "latest",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "jsdom": "^26.1.0",
+    "typescript": "~5.7.0",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.2",
+    "@elysiajs/jwt": "^1.4.2",
+    "clsx": "^2.1.1",
+    "elysia": "^1.4.29",
+    "lucide-react": "^1.27.0",
+    "pdf-lib": "^1.17.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0"
+  }
+}

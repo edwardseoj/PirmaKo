@@ -834,3 +834,79 @@ Fixes to satisfy the Authentication.md requirements:
 - Button widths consistent (same width for sign/cancel) ✓
 - Responsive design ✓
 - Comments in modified files ✓
+
+---
+
+# Session 8: AlertDialog Enhancement — Delete/Cancel Buttons for PDF List
+
+## Overview
+
+Fix to satisfy the Authentication.md requirement:
+- PDF List alert dialog after download now has Delete and Cancel buttons
+- Delete button is red with Lucide icon
+- Cancel button uses Lucide icon
+- PDF is only deleted when the Delete button is pressed (not on backdrop click or cancel)
+
+## Changes Made
+
+### 1. AlertDialog Component Enhancement
+**File:** `client/src/components/ui/alert-dialog.tsx`
+
+**Problem:** The AlertDialog only had a single "OK" button. When used for the post-download delete prompt, clicking OK or the backdrop would auto-delete the PDF with no way to cancel.
+
+**Fix:**
+- Added optional `icon` prop to replace the default warning icon
+- Added optional `actions` prop — an array of `AlertDialogAction` objects
+- Each action has: `label`, `icon` (optional Lucide element), `onClick`, `variant` ("primary" | "danger" | "ghost")
+- When `actions` is provided, renders custom buttons instead of the default OK
+- Backdrop click still calls `onClose` for dismissal
+- Exported `AlertDialogAction` interface for type safety
+
+### 2. AlertDialog CSS — Button Variants
+**File:** `client/src/components/ui/alert-dialog.css`
+
+- Added `.alert-card__actions` flex container for multiple buttons
+- Added `.alert-card__button-icon` for icon alignment inside buttons
+- Added `.alert-card__button--primary` (indigo, default OK)
+- Added `.alert-card__button--danger` (red, for delete/confirm destructive actions)
+- Added `.alert-card__button--ghost` (transparent with border, for cancel/dismiss)
+- All variants inherit base button styles (flex, padding, border-radius, transitions)
+
+### 3. Homepage Post-Download Delete Prompt
+**File:** `client/src/components/homepage/Homepage.tsx`
+
+**Problem:** The post-download AlertDialog only had an OK button and auto-deleted the PDF when closed. No way to cancel (keep the PDF).
+
+**Fix:**
+- Added `X` icon import from Lucide Icons (for cancel button)
+- Added `handleDownloadDeleteCancel` handler that closes the dialog without deleting
+- Replaced AlertDialog with custom actions:
+  - **Cancel button**: ghost variant, X icon, closes dialog without deleting
+  - **Delete button**: danger variant, Trash2 icon, deletes the PDF
+- PDF is only deleted when the Delete button is pressed
+- Backdrop click calls `onClose` which triggers cancel (safe default)
+
+---
+
+## Modified Files (Session 8)
+
+| File | Location | Changes |
+|------|----------|---------|
+| `alert-dialog.tsx` | `client/src/components/ui/` | Added `icon` and `actions` props, exported `AlertDialogAction` interface |
+| `alert-dialog.css` | `client/src/components/ui/` | Added button variant styles (primary, danger, ghost), actions container, button icon |
+| `Homepage.tsx` | `client/src/components/homepage/` | Added X icon import, cancel handler, updated post-download AlertDialog with delete/cancel buttons |
+
+---
+
+## Design Compliance
+
+- Dark mode only (matches Startup.css variables) ✓
+- Indigo accent (#6366f1) ✓
+- Rounded cards, soft shadows, smooth transitions ✓
+- AlertDialog inherits startup style ✓
+- Delete button: red with Lucide icon (Trash2) ✓
+- Cancel button: ghost with Lucide icon (X) ✓
+- PDF only deleted when Delete button pressed ✓
+- Backdrop click cancels (safe default) ✓
+- Responsive design ✓
+- Comments in modified files ✓

@@ -63,12 +63,21 @@
   line-height: 1.5;
 }
 
-/* OK button — matches the startup card accent style */
+/* ── Action buttons container ─────────────────────────────── */
+/* When multiple buttons are shown (e.g., Delete + Cancel) */
+.alert-card__actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Base button style — shared across all variants ──────── */
 .alert-card__button {
-  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 12px 24px;
-  background: var(--color-accent);
-  color: white;
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -77,15 +86,52 @@
   transition: all var(--transition-default);
   font-family: inherit;
 }
+.alert-card__button:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
 
-.alert-card__button:hover {
+/* Icon inside the button (before the label) */
+.alert-card__button-icon {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* ── Primary (indigo) — default OK button ────────────────── */
+.alert-card__button--primary {
+  background: var(--color-accent);
+  color: white;
+}
+.alert-card__button--primary:hover {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
 }
 
-.alert-card__button:active {
-  transform: translateY(0);
-  transition-duration: 0.1s;
+/* ── Danger (red) — delete/confirm destructive action ────── */
+.alert-card__button--danger {
+  background: var(--color-status-failed);
+  color: white;
+}
+.alert-card__button--danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+.alert-card__button--danger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+/* ── Ghost (transparent) — cancel/dismiss ────────────────── */
+.alert-card__button--ghost {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+.alert-card__button--ghost:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+  transform: translateY(-1px);
 }
 
 /* ── Animations ──────────────────────────────────────────────── */

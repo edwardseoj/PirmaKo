@@ -32,6 +32,7 @@ import {
   ArrowUpDown,
   FileText,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Navbar } from "../shared/Navbar";
 import { AlertDialog } from "../ui/alert-dialog";
@@ -154,6 +155,12 @@ export function Homepage({ onBack }: HomepageProps) {
     setDownloadDeleteTarget(null);
   };
 
+  // ── Cancel handler for post-download prompt ──────────────
+  // Just closes the dialog without deleting the PDF.
+  const handleDownloadDeleteCancel = () => {
+    setDownloadDeleteTarget(null);
+  };
+
   // ── Render ──────────────────────────────────────────────────
   return (
     <div className="homepage">
@@ -208,12 +215,27 @@ export function Homepage({ onBack }: HomepageProps) {
         />
       )}
 
-      {/* Post-download delete prompt — styled AlertDialog inheriting startup theme */}
+      {/* Post-download delete prompt — styled AlertDialog with delete/cancel buttons */}
       {downloadDeleteTarget && (
         <AlertDialog
           title="Delete PDF"
           message={`Do you want to delete "${downloadDeleteTarget.title}" after downloading? This action cannot be undone.`}
-          onClose={handleDownloadDeleteConfirm}
+          icon={<AlertCircle size={24} strokeWidth={1.5} />}
+          onClose={handleDownloadDeleteCancel}
+          actions={[
+            {
+              label: "Cancel",
+              icon: <X size={16} strokeWidth={2} />,
+              onClick: handleDownloadDeleteCancel,
+              variant: "ghost",
+            },
+            {
+              label: "Delete",
+              icon: <Trash2 size={16} strokeWidth={2} />,
+              onClick: handleDownloadDeleteConfirm,
+              variant: "danger",
+            },
+          ]}
         />
       )}
     </div>

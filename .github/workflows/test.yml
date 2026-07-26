@@ -1,0 +1,57 @@
+# ──────────────────────────────────────────────────────────────────
+# PirmaKo Unit Tests — GitHub Actions Workflow
+#
+# Runs frontend (Vitest) and backend (bun test) unit tests
+# on every push and pull request to main/master branches.
+# ──────────────────────────────────────────────────────────────────
+
+name: Unit Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+      # ── Checkout repository ────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Install Bun ───────────────────────────────────────────
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # ── Cache dependencies ────────────────────────────────────
+      - name: Cache Testing dependencies
+        uses: actions/cache@v4
+        with:
+          path: Testing/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('Testing/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      # ── Install dependencies ──────────────────────────────────
+      - name: Install dependencies
+        working-directory: Testing
+        run: bun install --frozen-lockfile
+
+      # ── Run frontend tests ────────────────────────────────────
+      - name: Run frontend unit tests (Vitest)
+        working-directory: Testing
+        run: bun run test:frontend
+
+      # ── Run backend tests ─────────────────────────────────────
+      - name: Run backend unit tests (bun test)
+        working-directory: Testing
+        run: bun run test:backend
