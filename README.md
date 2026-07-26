@@ -26,7 +26,10 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
 
 ---
 
-## Default accounts
+# Default accounts
+
+> Multiple requester accounts can be created
+> Only 1 signer account is recommended
 
 - **Requester**
   - Email: requester@gmail.com
@@ -36,3 +39,67 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
   - Password: iamsigner
 
 ---
+
+# Features
+
+- Authentication
+- PDF requester side:
+  - Upload
+  - Download
+  - Delete
+  - Status
+- PDF singer side:
+  - Sign
+  - Status
+- Sort PDF by filter
+- Upload e-signature
+- Drag and drop signature
+- Preview PDF before applying changes
+
+---
+
+# Unit testing
+
+> Compatible with Github Actions
+
+## CLI
+
+### Quick Start
+
+```bash
+# Navigate to the Testing directory
+cd Testing
+
+# Install dependencies
+bun install
+
+# Run all tests (frontend + backend)
+bun run test
+```
+
+---
+
+### Running Tests Individually
+
+#### Frontend Tests (Vitest)
+
+```bash
+# Run all frontend tests once
+bun run test:frontend
+
+# Run frontend tests in watch mode (re-runs on file changes)
+bun run test:frontend:watch
+
+# Run a specific test file
+bunx vitest run frontend/lib/utils.test.ts
+```
+
+#### Backend Tests (bun test)
+
+```bash
+# Run all backend tests
+bun run test:backend
+
+# Run a specific backend test file
+bun test backend/routes/auth.routes.test.ts
+```
