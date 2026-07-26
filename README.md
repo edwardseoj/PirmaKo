@@ -2,6 +2,7 @@
 
 E-Signing Application for Blocklabs' technical interview for Software Developer Intern Application   
 
+
 ## Installation
 
 1. Install bun (if not installed):
@@ -34,7 +35,8 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
      cd server; bun install
      ```
 
-    > restart terminal after ```bun install```   
+    > restart terminal after ```bun install```
+    
 
 ## How to Run
 
@@ -48,6 +50,7 @@ bun run dev
 
 **Live URL:** https://pirmako-production.up.railway.app/   
 
+
 ---
 
 # Default accounts
@@ -60,7 +63,8 @@ bun run dev
   - Password: iamrequester
 - **Signer**
   - Email: signer@gmail.com
-  - Password: iamsigner   
+  - Password: iamsigner
+    
 
 ---
 
@@ -78,13 +82,15 @@ bun run dev
 - Sort PDF by filter
 - Upload e-signature
 - Drag and drop signature
-- Preview PDF before applying changes   
+- Preview PDF before applying changes
+  
 
 ---
 
 # Unit testing
 
 > Compatible with Github Actions
+
 
 ## CLI
 
@@ -99,7 +105,8 @@ bun install
 
 # Run all tests (frontend + backend)
 bun run test
-```   
+```
+
 
 ---
 
@@ -116,7 +123,8 @@ bun run test:frontend:watch
 
 # Run a specific test file
 bunx vitest run frontend/lib/utils.test.ts
-```   
+```
+
 
 #### Backend Tests (bun test)
 
