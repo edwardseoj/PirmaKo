@@ -15,12 +15,13 @@
  *   6. Empty state
  *   7. Popup overlay (glass/blur background)
  *   8. PDF viewer popup (70/30 split layout)
- *   9. PDF editor popup (drag-and-drop signature)
+ *   9. PDF editor popup (left PDF canvas + right sidebar with column buttons)
  *  10. Shared popup button styles (ActionButtons, ActionButton)
  *  11. Upload e-signature button
  *  12. Confirmation dialog
  *  13. Popup entrance animations
- *  14. Responsive breakpoints
+ *  14. Loading skeleton
+ *  15. Responsive breakpoints
  * ============================================================ */
 
 
@@ -202,7 +203,7 @@
   border-color: var(--color-accent);
 }
 
-/* Funnel icon — indicates this is a filter/sort control */
+/* ArrowUpDown icon — indicates this is a sort control */
 .signer-sort-dropdown__icon {
   color: var(--color-text-secondary);
   flex-shrink: 0;
@@ -490,19 +491,19 @@
   animation: signerFadeIn 0.2s ease-out;
 }
 
-/* Shared popup container — both viewer and editor use this base */
+/* Shared popup container — both viewer and editor use this base.
+   Nearly full-viewport for maximum PDF viewing area. */
 .signer-popup {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 16px;         /* Large rounded corners like Startup cards */
+  border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: signerSlideUp 0.25s ease-out;
   display: flex;
-  overflow: hidden;            /* Clips child content to rounded corners */
-  width: 90%;
-  max-width: 960px;
-  height: 70vh;
-  max-height: 600px;
+  overflow: hidden;
+  width: 94vw;
+  height: 94vh;
+  margin: 0 auto;
 }
 
 
@@ -532,6 +533,14 @@
   gap: 12px;
   color: var(--color-text-secondary);
   opacity: 0.5;
+}
+
+/* Real PDF rendered via iframe — fills the viewer area */
+.signer-viewer-popup__iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--color-bg-primary);
 }
 
 /* Right side — PDF details + actions (30% width) */
@@ -573,71 +582,85 @@
   color: var(--color-text-primary);
 }
 
-/* Action buttons — pushed to the bottom of the details panel */
+/* Action buttons — centered at the bottom of the details panel,
+   stacked vertically so Sign and Cancel appear one above the other */
 .signer-viewer-popup__actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-top: auto;
+  align-items: stretch;        /* Buttons fill the column width */
 }
 
 
 /* ──────────────────────────────────────────────────────────────
  * 9. PDF editor popup — drag-and-drop signature
- *    The editor has a header, a scrollable canvas area, and
- *    an action bar at the bottom.
+ *
+ * Layout (per requirements):
+ *   Left side (flex: 7): PDF canvas — takes up most of the window
+ *   Right side (flex: 3): Sidebar with document info + column buttons
+ *
+ * The editor uses a horizontal row layout (like the viewer popup)
+ * so the PDF is large and easy to read.
  * ────────────────────────────────────────────────────────────── */
 
-/* Editor uses column layout (header → canvas → actions) */
+/* Editor uses row layout: PDF canvas on left, sidebar on right */
 .signer-editor-popup {
-  flex-direction: column;
+  flex-direction: row;
 }
 
-/* Canvas area — holds the simulated PDF page, scrollable */
-.signer-editor-popup__canvas-area {
-  flex: 1;
+/* Left side — PDF canvas area (takes up most space) */
+.signer-editor-popup__pdf-area {
+  flex: 7;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   background: var(--color-bg-primary);
-  padding: 24px;
+  padding: 16px;
   position: relative;
-  overflow-y: auto;            /* Make the canvas scrollable */
-  overflow-x: hidden;
+  overflow: hidden;
+  min-width: 0;               /* Allows flex item to shrink below content size */
+  border-right: 1px solid var(--color-border);
 }
 
-/* Simulated PDF page inside the editor */
+/* PDF page inside the editor — fills the available canvas area */
 .signer-editor-popup__page {
   width: 100%;
-  max-width: 500px;
   height: 100%;
-  max-height: 500px;
   background: #ffffff;         /* White page like a real PDF */
   border-radius: 4px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   position: relative;          /* Establishes positioning context for the signature */
-  padding: 32px;
   overflow: hidden;
 }
 
-/* Simulated text lines on the page — just decorative */
-.signer-editor-popup__page-lines {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  opacity: 0.15;
+/* Real PDF rendered via canvas (pdf.js) inside the editor */
+.signer-editor-popup__canvas {
+  width: 100%;
+  height: 100%;
+  display: block;              /* Removes default inline spacing */
+  border: none;
+  background: white;
 }
 
-.signer-editor-popup__line {
-  height: 8px;
-  border-radius: 4px;
-  background: #333;
+/* Uploaded signature image displayed inside the draggable element */
+.signer-editor-popup__signature-img {
+  max-width: 140px;
+  max-height: 50px;
+  object-fit: contain;
+  pointer-events: none;        /* Prevent the image from intercepting mouse events */
+  border-radius: 2px;
 }
-.signer-editor-popup__line:nth-child(odd) {
-  width: 100%;
-}
-.signer-editor-popup__line:nth-child(even) {
-  width: 80%;
+
+/* Hidden file input — off-screen but still accessible to screen readers */
+.signer-editor-popup__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Draggable signature element */
@@ -663,26 +686,67 @@
   box-shadow: 0 0 0 4px var(--color-accent-glow);
 }
 
-/* Editor header — shows document title and hint text */
-.signer-editor-popup__header {
+/* Right sidebar — document info + action buttons in column format */
+.signer-editor-popup__sidebar {
+  flex: 3;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-tertiary);
+  flex-direction: column;
+  padding: 24px 20px;
+  gap: 20px;
+  min-width: 220px;
+  background: var(--color-bg-secondary);
 }
 
-.signer-editor-popup__header-title {
-  font-size: 14px;
+/* Sidebar header — document title and hint text */
+.signer-editor-popup__sidebar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.signer-editor-popup__sidebar-title {
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
   letter-spacing: -0.2px;
+  line-height: 1.3;
 }
 
-.signer-editor-popup__header-hint {
-  font-size: 12px;
+.signer-editor-popup__sidebar-hint {
+  font-size: 13px;
   color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Sidebar actions — buttons stacked vertically (column format) */
+.signer-editor-popup__sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;            /* Pushes buttons to the bottom of the sidebar */
+}
+
+/* Upload button — full width in sidebar, indigo accent */
+.signer-editor-popup__sidebar-actions .signer-editor-popup__upload-btn {
+  width: 100%;
+}
+
+/* Action buttons in sidebar — full width and centered */
+.signer-editor-popup__sidebar-actions .signer-action-buttons {
+  flex-direction: column;
+  width: 100%;
+}
+
+.signer-editor-popup__sidebar-actions .signer-action-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Confirmation dialog in sidebar — full width */
+.signer-editor-popup__sidebar-actions .signer-confirm {
+  flex-direction: column;
+  width: 100%;
+  gap: 12px;
 }
 
 
@@ -691,11 +755,24 @@
  *     These styles apply to the reusable ActionButton component.
  * ────────────────────────────────────────────────────────────── */
 
-/* ActionButtons wrapper — flex row with gap */
+/* ActionButtons wrapper — flex row with gap, centered */
 .signer-action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
+  justify-content: center;
+}
+
+/* Inside the viewer popup, stack buttons vertically and stretch to full width */
+.signer-viewer-popup__actions .signer-action-buttons {
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Inside the viewer popup, make ALL buttons full width and centered */
+.signer-viewer-popup__actions .signer-action-btn {
+  width: 100%;
+  justify-content: center;
 }
 
 /* Individual action button — circular icon button */
@@ -715,6 +792,24 @@
 }
 .signer-action-btn:focus-visible {
   box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+/* Button with text label — pill-shaped instead of circular */
+.signer-action-btn.signer-action-btn--with-label {
+  width: auto;
+  padding: 0 18px;
+  gap: 8px;
+  height: 40px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.1px;
+}
+
+/* Text label inside the button, next to the icon */
+.signer-action-btn__label {
+  line-height: 1;
+  user-select: none;
 }
 
 /* Green (confirm) — outline style by default */
@@ -786,7 +881,7 @@
 
 /* ──────────────────────────────────────────────────────────────
  * 11. Upload e-signature button
- *     Leftmost button in the editor action bar.
+ *     Full-width button in the editor sidebar.
  *     Uses the FilePlus icon with an indigo color.
  * ────────────────────────────────────────────────────────────── */
 
@@ -794,9 +889,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 40px;
-  height: 40px;
+  gap: 8px;
+  padding: 10px 18px;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
   background: var(--color-accent-glow);
@@ -804,6 +898,9 @@
   cursor: pointer;
   transition: all var(--transition-default);
   outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
 }
 .signer-editor-popup__upload-btn:hover {
   background: var(--color-accent);
@@ -836,6 +933,106 @@
 
 
 /* ──────────────────────────────────────────────────────────────
+ * 12b. Disabled button state
+ *      Applied when a button should be non-interactive
+ *      (e.g., preview button before signature is uploaded).
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-action-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 12c. Editor right-side action layout
+ *      Stacks the preview button above the check/cancel row.
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-editor-popup__right-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 12d. Preview popup — full-screen overlay for debug preview
+ *      Shows the combined PDF in an iframe before confirming.
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: signerFadeIn 0.2s ease-out;
+}
+
+.signer-preview-popup {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 85vw;
+  height: 85vh;
+  animation: signerSlideUp 0.25s ease-out;
+}
+
+.signer-preview-popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+}
+
+.signer-preview-popup__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+}
+
+.signer-preview-popup__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-default);
+  outline: none;
+}
+.signer-preview-popup__close:hover {
+  color: var(--color-status-failed);
+  border-color: var(--color-status-failed);
+  background: var(--color-status-failed-bg);
+}
+
+.signer-preview-popup__iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: var(--color-bg-primary);
+}
+
+
+/* ──────────────────────────────────────────────────────────────
  * 13. Popup entrance animations
  *     Smooth fade-in and slide-up for modal popups.
  * ────────────────────────────────────────────────────────────── */
@@ -858,7 +1055,73 @@
 
 
 /* ──────────────────────────────────────────────────────────────
- * 14. Responsive breakpoints
+ * 14. Loading skeleton
+ *     Shimmer placeholders shown while PDFs load from the API.
+ * ────────────────────────────────────────────────────────────── */
+
+.signer-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.signer-skeleton-row__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.signer-skeleton-row__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.signer-skeleton-row__title {
+  height: 14px;
+  width: 60%;
+  border-radius: 4px;
+}
+
+.signer-skeleton-row__meta {
+  height: 12px;
+  width: 40%;
+  border-radius: 4px;
+}
+
+.signer-skeleton-row__badge {
+  width: 64px;
+  height: 24px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+/* Shimmer animation — a subtle left-to-right gradient sweep */
+.signer-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 25%,
+    var(--color-border) 50%,
+    var(--color-bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: signerShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes signerShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+ * 15. Responsive breakpoints
  *     Adjusts layout for smaller screens.
  * ────────────────────────────────────────────────────────────── */
 
@@ -866,15 +1129,15 @@
 @media (max-width: 768px) {
   .signer-popup {
     flex-direction: column;
-    height: 85vh;
-    max-height: none;
+    height: 96vh;
+    width: 98vw;
   }
 
   .signer-viewer-popup__pdf-area {
     border-right: none;
     border-bottom: 1px solid var(--color-border);
     flex: none;
-    height: 50%;
+    height: 60%;
   }
 
   .signer-viewer-popup__details {
@@ -882,9 +1145,27 @@
     min-width: 0;
   }
 
+  /* Editor: stack PDF and sidebar vertically on tablet */
+  .signer-editor-popup__pdf-area {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    flex: none;
+    height: 60%;
+  }
+
+  .signer-editor-popup__sidebar {
+    flex: 1;
+    min-width: 0;
+  }
+
   .signer-editor-popup__page {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
+  }
+
+  .signer-preview-popup {
+    width: 96vw;
+    height: 90vh;
   }
 }
 
@@ -917,11 +1198,36 @@
   }
 
   .signer-popup {
-    width: 95%;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .signer-preview-popup {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
   }
 
   .signer-viewer-popup__details {
     padding: 20px 16px;
+  }
+
+  /* Mobile: editor sidebar takes full width */
+  .signer-editor-popup__sidebar {
+    padding: 16px;
+    min-width: 0;
+  }
+
+  /* Stack action buttons vertically on small screens */
+  .signer-action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .signer-action-btn.signer-action-btn--with-label {
+    width: 100%;
+    justify-content: center;
   }
 }
 

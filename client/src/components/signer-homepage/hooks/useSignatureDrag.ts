@@ -24,12 +24,12 @@ export interface Position {
   y: number;
 }
 
-/** The size of the signature element (used to clamp within bounds). */
+/** Estimated size of the signature element (used for initial clamping). */
 const SIGNATURE_WIDTH = 160;
 const SIGNATURE_HEIGHT = 40;
 
-/** Starting position — centered horizontally, near the bottom. */
-const DEFAULT_POS: Position = { x: 50, y: 250 };
+/** Starting position — top-left corner, will be centered once the container renders. */
+const DEFAULT_POS: Position = { x: 0, y: 0 };
 
 /**
  * Custom hook for handling signature drag-and-drop within a container.
@@ -52,22 +52,26 @@ export function useSignatureDrag(
 
   /**
    * Called when the user presses the mouse button on the signature element.
-   * Records where the cursor is relative to the signature so we can maintain
-   * that offset during the drag.
+   * Records where the cursor is relative to the signature in container-local
+   * coordinates so we can maintain that offset during the drag.
    */
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       setIsDragging(true);
 
-      // Calculate the offset: how far the cursor is from the signature's top-left.
-      // This way, the signature doesn't snap to the cursor position on first move.
+      // Convert mouse position to container-relative coordinates first,
+      // then subtract the signature's current position to get the offset.
+      // This prevents the signature from "jumping" to the cursor on first move.
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
       dragOffset.current = {
-        x: e.clientX - sigPos.x,
-        y: e.clientY - sigPos.y,
+        x: e.clientX - rect.left - sigPos.x,
+        y: e.clientY - rect.top - sigPos.y,
       };
     },
-    [sigPos]
+    [sigPos, containerRef]
   );
 
   /**
@@ -84,14 +88,18 @@ export function useSignatureDrag(
       // Get the container's position on screen right now (accounts for any scrolling)
       const rect = container.getBoundingClientRect();
 
-      // Calculate new position relative to the container's top-left corner
-      const newX = e.clientX - dragOffset.current.x;
-      const newY = e.clientY - dragOffset.current.y;
+      // Convert current mouse position to container-relative coordinates,
+      // then subtract the initial offset to get the new signature position.
+      const containerX = e.clientX - rect.left;
+      const containerY = e.clientY - rect.top;
+
+      const newX = containerX - dragOffset.current.x;
+      const newY = containerY - dragOffset.current.y;
 
       // Clamp so the signature stays fully inside the container
       setSigPos({
-        x: Math.max(0, Math.min(newX - rect.left, rect.width - SIGNATURE_WIDTH)),
-        y: Math.max(0, Math.min(newY - rect.top, rect.height - SIGNATURE_HEIGHT)),
+        x: Math.max(0, Math.min(newX, rect.width - SIGNATURE_WIDTH)),
+        y: Math.max(0, Math.min(newY, rect.height - SIGNATURE_HEIGHT)),
       });
     }
 
@@ -114,5 +122,20 @@ export function useSignatureDrag(
     setSigPos(DEFAULT_POS);
   }, []);
 
-  return { sigPos, handleDragStart, isDragging, resetPosition };
+  /**
+   * Center the signature horizontally on the canvas and place it
+   * near the vertical center. Uses the actual container dimensions
+   * so the signature starts in a predictable, visible location.
+   */
+  const centerPosition = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    setSigPos({
+      x: Math.max(0, (rect.width - SIGNATURE_WIDTH) / 2),
+      y: Math.max(0, (rect.height - SIGNATURE_HEIGHT) / 2),
+    });
+  }, [containerRef]);
+
+  return { sigPos, handleDragStart, isDragging, resetPosition, centerPosition };
 }

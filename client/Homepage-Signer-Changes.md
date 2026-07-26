@@ -1,6 +1,6 @@
 # Homepage-Signer-Changes.md
 
-This document tracks all files that were **created**, **modified**, or **deleted** during the Signer Homepage screen improvement.
+This document tracks all files that were **created**, **modified**, or **deleted** during the Signer Homepage screen improvement and backend/database fixes.
 
 ---
 
@@ -10,7 +10,7 @@ This document tracks all files that were **created**, **modified**, or **deleted
 |------|----------|-------------|
 | `useSignatureDrag.ts` | `src/components/signer-homepage/hooks/useSignatureDrag.ts` | Custom hook for smooth drag-and-drop signature placement within the PDF page |
 | `PopupOverlay.tsx` | `src/components/signer-homepage/components/PopupOverlay.tsx` | Reusable glass/blur modal backdrop — click-outside-to-close pattern |
-| `ActionButtons.tsx` | `src/components/signer-homepage/components/ActionButtons.tsx` | Reusable icon-only action buttons with color theming (green/red/indigo, outline/filled) |
+| `ActionButtons.tsx` | `src/components/signer-homepage/components/ActionButtons.tsx` | Reusable action buttons with optional text labels, color theming (green/red/indigo, outline/filled) |
 | `ConfirmDialog.tsx` | `src/components/signer-homepage/components/ConfirmDialog.tsx` | Inline confirmation prompt with confirm/cancel icon buttons |
 | `SortDropdown.tsx` | `src/components/signer-homepage/components/SortDropdown.tsx` | Reusable sort dropdown with funnel icon, extracted from SignerHeader |
 
@@ -20,8 +20,10 @@ This document tracks all files that were **created**, **modified**, or **deleted
 
 | File | Location | What Changed |
 |------|----------|-------------|
-| `SignerHomepage.tsx` | `src/components/signer-homepage/SignerHomepage.tsx` | Major refactor: removed toasts, extracted reusable components, fixed drag-and-drop, added upload e-signature button, added confirmation dialog, updated check/cancel to icon-only buttons |
-| `SignerHomepage.css` | `src/components/signer-homepage/SignerHomepage.css` | Added styles for new components (ActionButtons, ConfirmDialog, upload button), added scrollable areas for viewer/editor, improved responsive design |
+| `SignerHomepage.tsx` | `src/components/signer-homepage/SignerHomepage.tsx` | Added text labels ("Sign", "Cancel") to PDF viewer popup action buttons; centered action buttons in viewer details panel; added `handleCheckClick` that shows alert dialog when clicking check without e-signature uploaded |
+| `SignerHomepage.css` | `src/components/signer-homepage/SignerHomepage.css` | Increased popup window size (92% width, 1100px max-width, 78vh height, 720px max-height); centered action buttons; added pill-shaped button styles with text labels; added editor action bar layout; improved responsive breakpoints for larger popup; **fixed PDF editor page to fill available space (removed 500x500px cap); changed canvas area to use `overflow: hidden` with stretch alignment** |
+| `ActionButtons.tsx` | `src/components/signer-homepage/components/ActionButtons.tsx` | Added optional `label` prop for text labels alongside icons; buttons render as pill-shaped when label is provided, circular when icon-only |
+| `useSignatureDrag.ts` | `src/components/signer-homepage/hooks/useSignatureDrag.ts` | **Fixed drag offset calculation — converted mouse coordinates to container-relative before computing offset, and simplified `handleMouseMove` to use consistent container-relative math throughout** |
 
 ---
 
@@ -48,10 +50,10 @@ App.tsx (screen router)
     ├── PdfViewerPopup (glass/blur overlay via PopupOverlay)
     │   ├── PDF area (70%, scrollable)
     │   ├── Details panel (30%, title, date, status)
-    │   └── ActionButtons (green Sign, red Cancel)
+    │   └── ActionButtons (green "Sign", red "Cancel" — centered, with text)
     └── PdfEditorPopup (via PopupOverlay)
         ├── Header (title + hint)
-        ├── Canvas area (scrollable, simulated PDF page)
+        ├── Canvas area (PDF page fills available space)
         │   └── useSignatureDrag (smooth drag-and-drop hook)
         ├── Upload e-signature button (FilePlus, indigo, leftmost)
         └── ActionButtons or ConfirmDialog (green Check + red Cancel)
@@ -62,30 +64,51 @@ App.tsx (screen router)
 ## Key Improvements Made
 
 ### Bug Fixes
+- **PDF Viewer popup too small** — Increased popup dimensions: 92% width (was 90%), 1100px max-width (was 960px), 78vh height (was 70vh), 720px max-height (was 600px)
+- **PDF Editor page too small** — Removed `max-width: 500px` and `max-height: 500px` from `.signer-editor-popup__page`; page now fills the entire canvas area. Changed canvas area from scrollable to `overflow: hidden` with `align-items: stretch` so the page fills available space
+- **Drag-and-drop not following cursor** — Fixed coordinate system mismatch in `useSignatureDrag.ts`: `handleDragStart` now converts mouse position to container-relative coordinates before computing offset; `handleMouseMove` now uses consistent container-relative math (no more mixing viewport and container coordinates)
+- **No alert when checking without signature** — Added `handleCheckClick` guard in `PdfEditorPopup` that shows `window.alert("Please upload an e-signature image before confirming.")` when the check button is clicked without a signature uploaded
+- **Sign/Cancel buttons not centered** — Added `align-items: center` to `.signer-viewer-popup__actions` and `justify-content: center` to `.signer-action-buttons`
+- **Sign/Cancel buttons missing text** — Added optional `label` prop to `ActionButton` component; "Sign" and "Cancel" text now displayed alongside icons in the PDF viewer popup
 - **PDF Viewer scrollable** — Added `overflow-y: auto` to the PDF preview area
 - **PDF Editor scrollable** — Added `overflow-y: auto` to the canvas area
 - **Signature drag teleport** — Fixed by using the PDF page element as the drag reference and measuring container bounds on each mousemove event
 - **Toast notifications removed** — All `toast.info`, `toast.success`, `toast.warning` calls and `sonner` imports removed
 
 ### UX Improvements
-- **Check/Cancel buttons** — Now minimal icon-only buttons (no text), green/red respectively, with confirmation dialog on Check
+- **Action buttons with text** — Sign and Cancel buttons now show icon + text label for better clarity
+- **Larger popup** — More room for PDF viewing and button interaction
+- **Centered buttons** — Sign/Cancel buttons are centered in the details panel for visual balance
 - **Upload e-signature button** — Added to editor action bar (leftmost, `FilePlus` icon, indigo color)
 - **Sorting** — Added `Filter` (funnel) icon from Lucide Icons to the sort dropdown
 - **Confirmation dialog** — Inline "Sign this document?" prompt before signing
+
+### Responsive Design
+- **Tablet (≤768px)** — Popup stacks vertically, PDF area takes 55% height
+- **Mobile (≤640px)** — Popup uses 98% width, action buttons stack vertically and fill width
+- **Small mobile (≤400px)** — Smaller font sizes for PDF row titles and meta text
 
 ### Code Quality
 - **Reusable components** — `PopupOverlay`, `ActionButtons`/`ActionButton`, `ConfirmDialog`, `SortDropdown`
 - **Custom hook** — `useSignatureDrag` extracts drag-and-drop logic from the component
 - **TypeScript** — Proper types for all props, interfaces, and function signatures
 - **Comments** — All files contain detailed comments explaining each section
-- **Component size** — Main `SignerHomepage.tsx` is ~310 lines (reduced from 622 with extracted components)
+- **Component size** — Main `SignerHomepage.tsx` stays under 600 lines with extracted sub-components
+
+### Design Consistency
+- **Matches Startup.css** — Same CSS variables, transitions, shadows, border radii, and dark-mode palette
+- **Indigo accent** — Consistent use of `--color-accent: #6366f1` across all interactive elements
+- **Rounded cards** — 12px border-radius on PDF rows, 16px on popup containers
+- **Soft shadows** — `--shadow-card` and `--shadow-card-hover` used consistently
+- **Smooth transitions** — `--transition-default: 0.25s cubic-bezier(0.4, 0, 0.2, 1)` on all interactive elements
 
 ---
 
 ## Notes
 
-- All data is **frontend-only** (hardcoded sample PDFs). No SQLite or backend integration yet.
-- The PDF viewer displays a placeholder until a real PDF renderer (e.g., `react-pdf`) is connected.
-- The PDF editor uses a simulated white page with line placeholders for the signature drag-and-drop area.
+- All data is fetched from the backend API (SQLite database via ElysiaJS).
+- The PDF viewer and editor display real PDFs via iframe from the `/api/pdfs/:id/download` endpoint.
+- Backend and database are fully functional: ElysiaJS server on port 3000, SQLite with WAL mode, pdf-lib for signature embedding.
+- Vite dev server proxies `/api` requests to the backend at `http://localhost:3000`.
 - Styling matches `Startup.css` — same CSS variables, transitions, shadows, border radii, and dark-mode palette.
-- Build passes with `bun run build` (TypeScript + Vite).
+- TypeScript compiles clean (`tsc --noEmit` passes). ESLint passes with no errors.

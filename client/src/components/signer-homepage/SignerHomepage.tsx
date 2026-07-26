@@ -5,21 +5,23 @@
  * - Title, push date/time, and status for each PDF
  * - E-sign button per row (file-pen-line icon)
  * - PDF viewer popup (glass/blur overlay, 70% viewer + 30% details)
- * - PDF editor popup (drag-and-drop signature placement)
- * - Sort dropdown with funnel icon (Recently Uploaded, Oldest, Alphabetical)
+ * - PDF editor popup (left: 70% PDF canvas, right: 30% sidebar with column buttons)
+ * - Sort dropdown with arrow-up-down icon (Recently Uploaded, Oldest, Alphabetical)
  * - Empty state with illustration when no PDFs exist
  *
  * Architecture:
  *   SignerHomepage
  *   ├── Navbar (shared, with back button)
  *   ├── Header with SortDropdown (title + sort controls)
+ *   ├── LoadingSkeleton (shown while PDFs load from API)
  *   ├── SignerPdfList (scrollable list of PDF rows)
  *   │   └── SignerPdfRow (single PDF: icon, title, date, status, e-sign button)
  *   ├── SignerEmptyState (shown when no PDFs)
- *   ├── PdfViewerPopup (modal: scrollable PDF preview + details + sign/cancel)
+ *   ├── PdfViewerPopup (modal: iframe PDF preview + details + sign/cancel)
  *   │   └── PopupOverlay + ActionButtons (reusable)
- *   └── PdfEditorPopup (modal: drag-and-drop signature + confirm/cancel)
+ *   └── PdfEditorPopup (modal: left PDF canvas + right sidebar with drag signature)
  *       └── PopupOverlay + ActionButtons + ConfirmDialog + useSignatureDrag (reusable)
+ *       └── PreviewPopup (debug: shows combined PDF before confirming)
  */
 
 import { useState, useRef } from "react";
@@ -30,12 +32,14 @@ import {
   CircleX,
   Check,
   FilePlus,
+  EyeOff,
 } from "lucide-react";
 import { Navbar } from "../shared/Navbar";
 import {
   useSignerPdfs,
   type SignerPdfRecord,
 } from "../../hooks/useSignerPdfs";
+import { usePdfRenderer } from "../../hooks/usePdfRenderer";
 import { PopupOverlay } from "./components/PopupOverlay";
 import { ActionButtons, ActionButton } from "./components/ActionButtons";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -53,7 +57,7 @@ interface SignerHomepageProps {
 }
 
 export function SignerHomepage({ onBack }: SignerHomepageProps) {
-  const { pdfs, sort, setSort, signPdf } = useSignerPdfs();
+  const { pdfs, loading, sort, setSort, signPdf } = useSignerPdfs();
 
   // Which PDF is open in the viewer popup (null = closed)
   const [viewerTarget, setViewerTarget] = useState<SignerPdfRecord | null>(null);
@@ -76,11 +80,21 @@ export function SignerHomepage({ onBack }: SignerHomepageProps) {
   };
 
   // ── Check button handler (inside editor popup) ───────────────
-  // Marks the PDF as signed and closes the editor.
-  const handleCheckClick = () => {
+  // Sends the signature to the backend to combine with the PDF.
+  // signatureFile: the uploaded signature image
+  // posX, posY: position in PDF points (not pixels or percentages)
+  const handleCheckClick = async (
+    signatureFile: File,
+    posX: number,
+    posY: number
+  ) => {
     if (!editorTarget) return;
-    signPdf(editorTarget.id);
-    setEditorTarget(null);
+    try {
+      await signPdf(editorTarget.id, signatureFile, posX, posY);
+      setEditorTarget(null);
+    } catch (err) {
+      console.error("Signing failed:", err);
+    }
   };
 
   // ── Cancel button handler ────────────────────────────────────
@@ -103,9 +117,11 @@ export function SignerHomepage({ onBack }: SignerHomepageProps) {
           <SortDropdown sort={sort} onSortChange={setSort} />
         </div>
 
-        {/* Main content — empty state or PDF list */}
+        {/* Main content — loading, empty state, or PDF list */}
         <div className="signer-homepage__content">
-          {pdfs.length === 0 ? (
+          {loading ? (
+            <LoadingSkeleton />
+          ) : pdfs.length === 0 ? (
             <SignerEmptyState />
           ) : (
             <SignerPdfList pdfs={pdfs} onESign={handleESignClick} />
@@ -130,6 +146,27 @@ export function SignerHomepage({ onBack }: SignerHomepageProps) {
           onCancel={handleCancelClick}
         />
       )}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * LoadingSkeleton — shimmer placeholders shown while data loads
+ * ────────────────────────────────────────────────────────────── */
+
+function LoadingSkeleton() {
+  return (
+    <div className="signer-pdf-list">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="signer-skeleton-row">
+          <div className="signer-skeleton-row__icon signer-skeleton-shimmer" />
+          <div className="signer-skeleton-row__text">
+            <div className="signer-skeleton-row__title signer-skeleton-shimmer" />
+            <div className="signer-skeleton-row__meta signer-skeleton-shimmer" />
+          </div>
+          <div className="signer-skeleton-row__badge signer-skeleton-shimmer" />
+        </div>
+      ))}
     </div>
   );
 }
@@ -299,7 +336,7 @@ function SignerEmptyState() {
  * PdfViewerPopup — modal overlay for viewing a PDF before signing
  *
  * Layout:
- *   - Left side (70%): PDF viewer area (scrollable, placeholder for now)
+ *   - Left side (70%): Real PDF rendered via iframe (scrollable)
  *   - Right side (30%): PDF details + Sign / Cancel buttons
  *   - Background: glass/blur effect via PopupOverlay
  * ────────────────────────────────────────────────────────────── */
@@ -324,15 +361,19 @@ function PdfViewerPopup({
     minute: "2-digit",
   });
 
+  // URL to fetch the actual PDF file from the backend
+  const pdfUrl = `/api/pdfs/${pdf.id}/download`;
+
   return (
     <PopupOverlay onClose={onCancel}>
       <div className="signer-popup signer-viewer-popup">
         {/* Left side — PDF viewer (70% width, scrollable) */}
         <div className="signer-viewer-popup__pdf-area">
-          <div className="signer-viewer-popup__pdf-placeholder">
-            <FileText size={48} strokeWidth={1} />
-            <span>PDF Preview</span>
-          </div>
+          <iframe
+            src={pdfUrl}
+            className="signer-viewer-popup__iframe"
+            title={`Preview of ${pdf.title}`}
+          />
         </div>
 
         {/* Right side — PDF details + actions (30% width) */}
@@ -355,11 +396,12 @@ function PdfViewerPopup({
             </span>
           </div>
 
-          {/* Action buttons — Sign (green) and Cancel (red) */}
+          {/* Action buttons — Sign (green) and Cancel (red), centered */}
           <div className="signer-viewer-popup__actions">
             <ActionButtons>
               <ActionButton
                 icon={<Signature size={18} strokeWidth={1.75} />}
+                label="Sign"
                 tooltip="Sign this document"
                 color="green"
                 onClick={onSign}
@@ -367,6 +409,7 @@ function PdfViewerPopup({
               />
               <ActionButton
                 icon={<CircleX size={18} strokeWidth={1.75} />}
+                label="Cancel"
                 tooltip="Cancel signing"
                 color="red"
                 onClick={onCancel}
@@ -382,13 +425,35 @@ function PdfViewerPopup({
 /* ──────────────────────────────────────────────────────────────
  * PdfEditorPopup — modal overlay for placing a signature on the PDF
  *
+ * Uses pdf.js to render the PDF to a canvas (not an iframe) so we
+ * have exact control over the rendering and can accurately map
+ * pixel positions to PDF coordinates.
+ *
+ * Layout (per requirements):
+ *   Left side (flex: 7): PDF canvas — takes up most of the window
+ *   Right side (flex: 3): Document title, hint text, and action buttons
+ *   Buttons are stacked vertically (column format) on the right side.
+ *
  * Features:
- *   - A scrollable PDF page with a draggable signature element
- *   - Upload e-signature button (leftmost, FilePlus icon, indigo)
+ *   - Real PDF rendered via canvas (pdf.js) with draggable signature overlay
+ *   - Upload e-signature button (FilePlus icon, indigo)
+ *   - Preview button (indigo, EyeOff icon)
  *   - Check button (green) with inline confirmation dialog
  *   - Cancel button (red) to abort signing
  *   - Uses useSignatureDrag hook for smooth drag-and-drop
+ *   - Sends signature + position to backend on confirm
  * ────────────────────────────────────────────────────────────── */
+
+/*
+ * Signature container padding/border offsets (in CSS pixels).
+ * The signature element has padding: 8px 14px and border: 2px dashed.
+ * When the user drags the signature, sigPos tracks the outer container's
+ * top-left corner. But the actual image inside starts after the border
+ * and padding. We subtract these offsets so the PDF signature matches
+ * the visual position in the editor.
+ */
+const SIG_PADDING_X = 16; // border(2) + padding-left(14)
+const SIG_PADDING_Y = 10; // border(2) + padding-top(8)
 
 function PdfEditorPopup({
   pdf,
@@ -396,103 +461,276 @@ function PdfEditorPopup({
   onCancel,
 }: {
   pdf: SignerPdfRecord;
-  onCheck: () => void;
+  onCheck: (signatureFile: File, posX: number, posY: number) => void;
   onCancel: () => void;
 }) {
-  // Ref to the PDF page element (used by the drag hook for coordinate math)
+  // Ref to the PDF page element (used by the drag hook AND the canvas renderer)
   const pageRef = useRef<HTMLDivElement>(null);
 
+  // Hidden file input ref for signature upload
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Drag-and-drop hook — manages signature position and mouse events
-  const { sigPos, handleDragStart, resetPosition } = useSignatureDrag(pageRef);
+  const { sigPos, handleDragStart, centerPosition } =
+    useSignatureDrag(pageRef);
+
+  // Canvas-based PDF renderer — gives us exact pixel-to-PDF coordinate mapping
+  const pdfUrl = `/api/pdfs/${pdf.id}/download`;
+  const { canvasRef, renderInfo } = usePdfRenderer(pdfUrl, pageRef);
+
+  // The uploaded signature file
+  const [signatureFile, setSignatureFile] = useState<File | null>(null);
+
+  // Object URL for previewing the uploaded signature
+  const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
 
   // Confirmation state: when true, shows "Are you sure?" instead of the check button
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Handle the upload e-signature button click (placeholder — no file picker yet)
+  // Preview state: blob URL of the combined PDF for debugging
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // ── Upload e-signature button handler ────────────────────────
+  // Opens the native file picker for image files (PNG, JPEG).
   const handleUploadClick = () => {
-    resetPosition();
+    fileInputRef.current?.click();
   };
 
-  // Called when the user confirms they want to sign
+  // When a signature file is selected, store it and create a preview URL.
+  // Also center the signature on the canvas for accurate initial placement.
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSignatureFile(file);
+    // Create a temporary URL so the browser can display the image
+    const previewUrl = URL.createObjectURL(file);
+    setSignaturePreview(previewUrl);
+    // Center the signature on the canvas once it's rendered
+    centerPosition();
+  };
+
+  /**
+   * Convert the signature's pixel position (relative to the page container)
+   * into PDF point coordinates. Accounts for the signature container's
+   * padding and border so the PDF signature matches the visual position.
+   *
+   * The canvas renderer provides:
+   *   - renderInfo.offsetX/Y: where the PDF content starts in the container
+   *   - renderInfo.scale: the factor used to resize the PDF to fit the container
+   *
+   * So: pdfX = (containerPixelX - offsetX) / scale
+   *     pdfY = (containerPixelY - offsetY) / scale
+   */
+  const convertToPdfCoords = (x: number, y: number) => {
+    if (!renderInfo) return { posX: 0, posY: 0 };
+    const posX = (x + SIG_PADDING_X - renderInfo.offsetX) / renderInfo.scale;
+    const posY = (y + SIG_PADDING_Y - renderInfo.offsetY) / renderInfo.scale;
+    return { posX, posY };
+  };
+
+  // ── Preview button handler ───────────────────────────────────
+  // Calls the backend preview endpoint to generate a combined PDF
+  // with the signature embedded. Does NOT save to disk or update SQLite.
+  const handlePreview = async () => {
+    if (!signatureFile || !renderInfo) {
+      window.alert("Please upload an e-signature image first.");
+      return;
+    }
+
+    setPreviewLoading(true);
+    try {
+      const { posX, posY } = convertToPdfCoords(sigPos.x, sigPos.y);
+
+      const formData = new FormData();
+      formData.append("signature", signatureFile);
+      formData.append("posX", String(posX));
+      formData.append("posY", String(posY));
+
+      const res = await fetch(`/api/pdfs/${pdf.id}/preview`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Preview failed");
+
+      const blob = await res.blob();
+      // Revoke previous preview URL to avoid memory leaks
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+    } catch (err) {
+      console.error("Preview generation failed:", err);
+      window.alert("Failed to generate preview. Please try again.");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  // Close the preview popup
+  const closePreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+  };
+
+  // Called when the user confirms they want to sign.
+  // Converts the signature's pixel position to PDF point coordinates
+  // and sends it to the backend.
   const handleConfirmSign = () => {
+    if (!signatureFile || !renderInfo) return;
+
     setShowConfirm(false);
-    onCheck();
+
+    const { posX, posY } = convertToPdfCoords(sigPos.x, sigPos.y);
+    onCheck(signatureFile, posX, posY);
+  };
+
+  // Check button handler — shows alert if no signature uploaded, otherwise opens confirmation
+  const handleCheckClick = () => {
+    if (!signatureFile) {
+      window.alert("Please upload an e-signature image before confirming.");
+      return;
+    }
+    setShowConfirm(true);
   };
 
   return (
     <PopupOverlay onClose={onCancel}>
       <div className="signer-popup signer-editor-popup">
-        {/* Header showing which document is being edited */}
-        <div className="signer-editor-popup__header">
-          <span className="signer-editor-popup__header-title">{pdf.title}</span>
-          <span className="signer-editor-popup__header-hint">
-            Drag the signature to the desired position
-          </span>
-        </div>
-
-        {/* PDF editor canvas — scrollable area with the simulated PDF page */}
-        <div className="signer-editor-popup__canvas-area">
+        {/* Left side — PDF canvas (takes up most of the window) */}
+        <div className="signer-editor-popup__pdf-area">
+          {/* pageRef is shared between the drag hook and the canvas renderer */}
           <div className="signer-editor-popup__page" ref={pageRef}>
-            {/* Simulated text lines on the page */}
-            <div className="signer-editor-popup__page-lines">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="signer-editor-popup__line" />
-              ))}
-            </div>
+            {/* PDF rendered to canvas via pdf.js — gives us exact coordinate mapping */}
+            <canvas
+              ref={canvasRef}
+              className="signer-editor-popup__canvas"
+            />
 
-            {/* Draggable signature element — position is managed by the hook */}
-            <div
-              className="signer-editor-popup__signature"
-              style={{ left: sigPos.x, top: sigPos.y }}
-              onMouseDown={handleDragStart}
-              role="img"
-              aria-label="Drag to place your signature"
-            >
-              <Signature size={24} strokeWidth={1.5} />
-              <span>Your Signature</span>
-            </div>
+            {/* Draggable signature element — only shown after uploading a signature */}
+            {signatureFile && signaturePreview && (
+              <div
+                className="signer-editor-popup__signature"
+                style={{ left: sigPos.x, top: sigPos.y }}
+                onMouseDown={handleDragStart}
+                role="img"
+                aria-label="Drag to place your signature"
+              >
+                <img
+                  src={signaturePreview}
+                  alt="Your signature"
+                  className="signer-editor-popup__signature-img"
+                  draggable={false}
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Action buttons — upload (left) and check/cancel (right) */}
-        <div className="signer-editor-popup__actions">
-          {/* Upload e-signature button — leftmost, indigo */}
-          <button
-            className="signer-editor-popup__upload-btn"
-            onClick={handleUploadClick}
-            type="button"
-            title="Upload e-signature"
-            aria-label="Upload e-signature image"
-          >
-            <FilePlus size={16} strokeWidth={2} />
-          </button>
+        {/* Right side — document info + action buttons in column format */}
+        <div className="signer-editor-popup__sidebar">
+          {/* Document title */}
+          <div className="signer-editor-popup__sidebar-header">
+            <span className="signer-editor-popup__sidebar-title">{pdf.title}</span>
+            <span className="signer-editor-popup__sidebar-hint">
+              {signatureFile
+                ? "Drag the signature to the desired position"
+                : "Upload an e-signature image first"}
+            </span>
+          </div>
 
-          {/* Right side: check/cancel, or confirmation dialog */}
-          {showConfirm ? (
-            <ConfirmDialog
-              message="Sign this document?"
-              onConfirm={handleConfirmSign}
-              onCancel={() => setShowConfirm(false)}
+          {/* Hidden file input for signature upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            className="signer-editor-popup__file-input"
+            onChange={handleFileChange}
+          />
+
+          {/* Action buttons — stacked vertically in column format */}
+          <div className="signer-editor-popup__sidebar-actions">
+            {/* Upload e-signature button — full width, indigo */}
+            <button
+              className="signer-editor-popup__upload-btn"
+              onClick={handleUploadClick}
+              type="button"
+              title="Upload e-signature"
+              aria-label="Upload e-signature image"
+            >
+              <FilePlus size={16} strokeWidth={2} />
+              <span>Upload Signature</span>
+            </button>
+
+            {/* Preview button — indigo, full width */}
+            <ActionButton
+              icon={<EyeOff size={18} strokeWidth={1.75} />}
+              label="Preview"
+              tooltip="Preview how the signed PDF will look"
+              color="indigo"
+              onClick={handlePreview}
+              disabled={!signatureFile || previewLoading}
             />
-          ) : (
-            <ActionButtons>
-              <ActionButton
-                icon={<Check size={18} strokeWidth={2} />}
-                tooltip="Confirm signature"
-                color="green"
-                onClick={() => setShowConfirm(true)}
-                filled
+
+            {/* Confirmation dialog or check/cancel buttons */}
+            {showConfirm ? (
+              <ConfirmDialog
+                message="Sign this document?"
+                onConfirm={handleConfirmSign}
+                onCancel={() => setShowConfirm(false)}
               />
-              <ActionButton
-                icon={<CircleX size={18} strokeWidth={1.75} />}
-                tooltip="Cancel signing"
-                color="red"
-                onClick={onCancel}
-              />
-            </ActionButtons>
-          )}
+            ) : (
+              <ActionButtons>
+                <ActionButton
+                  icon={<Check size={18} strokeWidth={2} />}
+                  label="Sign"
+                  tooltip="Confirm signature"
+                  color="green"
+                  onClick={handleCheckClick}
+                  filled
+                />
+                <ActionButton
+                  icon={<CircleX size={18} strokeWidth={1.75} />}
+                  label="Cancel"
+                  tooltip="Cancel signing"
+                  color="red"
+                  onClick={onCancel}
+                />
+              </ActionButtons>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Preview popup — shows the combined PDF in an iframe for debugging */}
+      {previewUrl && (
+        <div className="signer-preview-overlay" onClick={closePreview}>
+          <div
+            className="signer-preview-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="signer-preview-popup__header">
+              <span className="signer-preview-popup__title">
+                Preview — {pdf.title}
+              </span>
+              <button
+                className="signer-preview-popup__close"
+                onClick={closePreview}
+                type="button"
+                aria-label="Close preview"
+              >
+                <CircleX size={18} strokeWidth={1.75} />
+              </button>
+            </div>
+            <iframe
+              src={previewUrl}
+              className="signer-preview-popup__iframe"
+              title={`Preview of signed ${pdf.title}`}
+            />
+          </div>
+        </div>
+      )}
     </PopupOverlay>
   );
 }

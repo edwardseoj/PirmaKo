@@ -12,7 +12,7 @@
  */
 
 import { useRef, useState, useEffect } from "react";
-import { Filter } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import type { SortOption } from "../../../hooks/useSignerPdfs";
 
 /** All available sort options with display labels. */
@@ -53,8 +53,8 @@ export function SortDropdown({ sort, onSortChange }: SortDropdownProps) {
 
   return (
     <div className="signer-sort-dropdown" ref={dropdownRef}>
-      {/* Funnel icon — indicates this is a filter/sort control */}
-      <Filter size={14} className="signer-sort-dropdown__icon" />
+      {/* ArrowUpDown icon — indicates this is a sort control */}
+      <ArrowUpDown size={14} className="signer-sort-dropdown__icon" />
 
       {/* The clickable trigger that opens/closes the menu */}
       <button
