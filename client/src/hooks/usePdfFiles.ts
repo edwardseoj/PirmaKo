@@ -16,6 +16,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../lib/api";
+import type { SortOption } from "../lib/constants";
 
 /** Shape of a single PDF record as returned by the API. */
 export interface PdfRecord {
@@ -27,8 +28,8 @@ export interface PdfRecord {
   requester_email: string | null; // Email of the requester who uploaded this PDF
 }
 
-/** Available sort options. */
-export type SortOption = "newest" | "oldest" | "alpha";
+// Re-export SortOption for backward compatibility with existing imports
+export type { SortOption } from "../lib/constants";
 
 /**
  * Custom hook for managing PDF files via the API.
@@ -117,12 +118,12 @@ export function usePdfFiles(requesterEmail?: string) {
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${title}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     },
     []

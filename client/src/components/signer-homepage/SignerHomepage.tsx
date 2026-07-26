@@ -42,6 +42,7 @@ import {
 } from "../../hooks/useSignerPdfs";
 import { usePdfRenderer } from "../../hooks/usePdfRenderer";
 import { apiFetch } from "../../lib/api";
+import { formatShortDate, formatLongDate, formatTime } from "../../lib/formatDate";
 import { PopupOverlay } from "./components/PopupOverlay";
 import { ActionButtons, ActionButton } from "./components/ActionButtons";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -208,15 +209,8 @@ function SignerPdfRow({
   onESign: () => void;
 }) {
   // Format the ISO timestamp into readable local date + time
-  const formattedDate = new Date(pdf.uploaded_at).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  const formattedTime = new Date(pdf.uploaded_at).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formattedDate = formatShortDate(pdf.uploaded_at);
+  const formattedTime = formatTime(pdf.uploaded_at);
 
   return (
     <div className="signer-pdf-row">
@@ -359,15 +353,8 @@ function PdfViewerPopup({
   onCancel: () => void;
 }) {
   // Format dates for the detail panel
-  const formattedDate = new Date(pdf.uploaded_at).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  const formattedTime = new Date(pdf.uploaded_at).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formattedDate = formatLongDate(pdf.uploaded_at);
+  const formattedTime = formatTime(pdf.uploaded_at);
 
   // URL to fetch the actual PDF file from the backend
   const pdfUrl = `/api/pdfs/${pdf.id}/download`;

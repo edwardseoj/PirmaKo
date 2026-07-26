@@ -13,14 +13,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { ArrowUpDown } from "lucide-react";
-import type { SortOption } from "../../../hooks/useSignerPdfs";
-
-/** All available sort options with display labels. */
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "newest", label: "Recently Uploaded" },
-  { value: "oldest", label: "Oldest" },
-  { value: "alpha", label: "Alphabetical by Title" },
-];
+import { SORT_OPTIONS, type SortOption } from "../../../lib/constants";
 
 interface SortDropdownProps {
   /** The currently active sort option. */

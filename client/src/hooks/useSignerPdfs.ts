@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../lib/api";
+import type { SortOption } from "../lib/constants";
 
 /** Shape of a single PDF record seen by the signer. */
 export interface SignerPdfRecord {
@@ -27,8 +28,8 @@ export interface SignerPdfRecord {
   requester_email: string | null;
 }
 
-/** Available sort options. */
-export type SortOption = "newest" | "oldest" | "alpha";
+// Re-export SortOption for backward compatibility with existing imports
+export type { SortOption } from "../lib/constants";
 
 export function useSignerPdfs() {
   const [pdfs, setPdfs] = useState<SignerPdfRecord[]>([]);
