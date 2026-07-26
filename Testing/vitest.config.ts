@@ -12,6 +12,9 @@ export default defineConfig({
       { find: "react/jsx-dev-runtime", replacement: path.resolve(__dirname, "node_modules/react/jsx-dev-runtime") },
       { find: "react-dom/client", replacement: path.resolve(__dirname, "node_modules/react-dom/client") },
       { find: "lucide-react", replacement: path.resolve(__dirname, "node_modules/lucide-react") },
+      // Force utility libs to Testing/node_modules when resolved from client/src
+      { find: "clsx", replacement: path.resolve(__dirname, "node_modules/clsx") },
+      { find: "tailwind-merge", replacement: path.resolve(__dirname, "node_modules/tailwind-merge") },
     ],
   },
   test: {
