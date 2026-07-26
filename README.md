@@ -17,7 +17,6 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
    ```
 
 2. Install all dependencies:
-> restart terminal after ```bun install```
 
   **Unix (macOS/Linux):**
    ```bash
@@ -34,6 +33,8 @@ E-Signing Application for Blocklabs' technical interview for Software Developer 
 
    cd server; bun install
    ```
+
+> restart terminal after ```bun install```
 
 ## How to Run
 
