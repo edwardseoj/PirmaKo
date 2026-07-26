@@ -1,0 +1,11 @@
+node_modules
+client/node_modules
+server/node_modules
+Testing/node_modules
+.git
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+uploads/*
+.env
+.env.*
